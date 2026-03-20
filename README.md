@@ -115,18 +115,41 @@ The premium renews automatically every Monday. Workers can pause or cancel with 
 We're using three distinct models, each doing a specific job.
 
 **Risk Prediction Model (XGBoost Classifier)**
-
-This runs during onboarding when a new worker signs up. It takes inputs like the city's historical flood frequency, monthly average rainfall, AQI trends over the past year, cyclone zone classification, how often disruption events have occurred in that area, and what shift hours the worker operates. It outputs a risk score between 0 and 1 plus a category label (Low / Medium / High / Very High). This score directly feeds into the premium calculation.
+This runs during onboarding when a new worker signs up. It takes inputs like the city's historical flood frequency, monthly average rainfall, AQI trends over the past year, cyclone zone classification, how often disruption events have occurred in that area, and what shift hours the worker operates. It outputs a risk score between 0 and 1 plus a category label (Low / Medium / High / Very High).
 
 **Premium Calculation Model (XGBoost Regressor)**
-
-Takes the risk score from Model 1 and adds the worker's income data, city tier, platform preference, and claim history (for renewal policies) to output a weekly premium in rupees. Business rules cap it between ₹35 and ₹500 regardless of what the model outputs.
+Takes the risk score from Model 1 and adds the worker's income data, city tier, platform preference, and claim history (for renewal policies) to output a weekly premium in rupees. Business rules cap it between ₹35 and ₹500.
 
 **Fraud Detection Model (Isolation Forest)**
+This one runs every time a claim is about to be processed. Isolation Forest is an anomaly detection algorithm — it doesn't need labeled fraud examples to work, which is great for us since we don't have historical fraud data to train on. 
 
-This one runs every time a claim is about to be processed. Isolation Forest is an anomaly detection algorithm — it doesn't need labeled fraud examples to work, which is great for us since we don't have historical fraud data to train on. It looks at GPS coordinates at claim time vs. registered zone, time gap between disruption start and claim filing, how many claims the worker has filed in the past 30 days, whether income declarations have changed significantly, and device/IP level patterns.
+---
 
-If the fraud score is below 0.3 the claim auto-approves. Between 0.3 and 0.7 it gets flagged for manual review. Above 0.7 the claim is blocked and an admin alert fires.
+## 🚨 Market Crash Response: Adversarial Defense & Anti-Spoofing Strategy
+
+If you build an automated payout system, someone *will* try to drain it. What happens when a coordinated fraud ring of 500 delivery partners uses GPS spoofing apps to simulate being "stranded" in a flooded zone to drain the platform's liquidity pool? 
+
+Simple GPS verification is dead. Here is our airtight logic to catch the faker without punishing the genuinely stranded worker like Arjun.
+
+We rely on **Multi-Dimensional Anomaly Detection**, moving beyond static data to behavioral and physical constraints:
+
+**1. The "GPS Jitter" Test (Physics vs. Code)**
+Real mobile GPS hardware drifts. Even when a worker is standing perfectly still under a bridge escaping the rain, their GPS coordinates will "jitter" by a few meters every minute due to satellite interference and atmospheric conditions. GPS spoofing apps often broadcast mathematically perfect, static coordinates. 
+* **The Check:** If 500 coordinates remain precisely static down to the 6th decimal place over a 5-minute window, they aren't human. Block the claim.
+
+**2. Impossible Velocity (Time-Travel Defense)**
+Fraud rings often spoof locations from their couches. 
+* **The Check:** We log the worker's last known authentic ping (e.g., when they last logged into their delivery platform or made a legitimate delivery drop-off). If Arjun's last verified drop-off was in Koramangala at 8:00 PM, and his phone suddenly claims he is stranded in a flooded zone in Whitefield (15km away) at 8:02 PM, that's impossible velocity. Flagged immediately.
+
+**3. The 6-Decimal Clustering Trap**
+If 500 independent workers are stranded on the same street, they will be spread out across tea stalls, bus shelters, and shops. 
+* **The Check:** If our Isolation Forest model detects an unnatural density of claims originating from the exact same latitude and longitude (or from the exact same device IP subnet/fingerprint), it identifies a coordinated bot farm. 
+
+**4. The Platform Consistency Check**
+If a worker claims a payout because their zone is flooded and unworkable, they shouldn't be delivering.
+* **The Check:** Our system cross-references the mock platform API. If a worker's ZeroLoss app claims they are stranded in an active "Disruption Zone" but their Swiggy/Zomato ID shows they just accepted and completed a delivery in that exact time window, the claim is rejected for contradicting behavior.
+
+**How do we protect the honest worker?** If a massive fraud ring attacks, we don't shut down the system. The Isolation Forest model dynamically quarantines the *specific clustered anomaly* (the 500 fake bots) giving them a fraud score of >0.8, pushing them to a manual review queue that requires physical photo verification. Meanwhile, Arjun—whose GPS shows natural drift, natural velocity, and a clean behavioral history—receives an anomaly score of 0.1 and gets his ₹800 auto-payout instantly. Honest workers never feel the friction.
 
 ---
 
@@ -136,21 +159,15 @@ The frontend is React with TailwindCSS and Chart.js for analytics. Workers acces
 
 The backend is FastAPI (Python). It handles auth, worker management, policy lifecycle, the trigger engine, and coordinates the ML models. The trigger engine runs on a 30-minute polling cycle using APScheduler — it calls the weather and AQI APIs, checks conditions against thresholds, and fires claims automatically when thresholds are crossed.
 
-PostgreSQL stores everything — workers, policies, claims, payouts, trigger events.
+PostgreSQL stores everything. The ML models are trained offline and saved as .pkl files. 
 
-The ML models are trained offline and saved as .pkl files. The backend loads them at startup and uses them for inference. No heavy retraining happens in production.
-
-External integrations: OpenWeatherMap API (free tier, 1000 calls/day, more than enough), OpenAQ for air quality data (completely free, no key needed), Razorpay test mode for payment simulation, and custom mock APIs we built for government alerts, traffic data, and platform status since no real public APIs exist for those.
-
-```
+```text
 Worker (React App)
       ↓ ↑
   FastAPI Backend
    ↙     ↘      ↘
 ML Models  PostgreSQL  External APIs
-                         (Weather, AQI,
-                          Payment Mock)
-```
+
 
 Claim automation flow:
 ```

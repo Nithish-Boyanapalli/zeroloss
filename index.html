@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<title>ZeroLoss</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --ink:#08060E;--ink2:#100E1A;--ink3:#1A1726;--ink4:#241F32;--ink5:#2E2840;
+  --gold:#F5A623;--gold2:#E8960F;--gd:rgba(245,166,35,.12);--gb:rgba(245,166,35,.28);
+  --cyan:#00D4FF;--cd:rgba(0,212,255,.1);--cb:rgba(0,212,255,.25);
+  --rose:#FF4B6E;--rd:rgba(255,75,110,.1);--rb:rgba(255,75,110,.25);
+  --lime:#39D98A;--ld:rgba(57,217,138,.1);--lb:rgba(57,217,138,.25);
+  --w:#F8F4FF;--mu:#7C748F;--fa:#3D3650;
+  --sans:'DM Sans',sans-serif;--disp:'Syne',sans-serif;
+}
+html,body{height:100%;overflow:hidden;background:var(--ink)}
+body{font-family:var(--sans);color:var(--w);-webkit-font-smoothing:antialiased}
+#root{height:100%;max-width:430px;margin:0 auto;display:flex;flex-direction:column;position:relative}
+.sa{flex:1;overflow-y:auto;overflow-x:hidden;scroll-behavior:smooth}
+.sa::-webkit-scrollbar{width:0}
+.pv{display:none}.pv.on{display:block;animation:fi .3s cubic-bezier(.22,1,.36,1) both}
+@keyframes fi{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+.card{background:var(--ink3);border:1px solid var(--fa);border-radius:18px}
+.cg{border-color:var(--gb);box-shadow:0 0 20px rgba(245,166,35,.07)}
+.cl{border-color:var(--lb);box-shadow:0 0 20px rgba(57,217,138,.07)}
+.cr{border-color:var(--rb);box-shadow:0 0 20px rgba(255,75,110,.07)}
+.cc{border-color:var(--cb);box-shadow:0 0 20px rgba(0,212,255,.07)}
+.tag{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
+.tg{background:var(--gd);border:1px solid var(--gb);color:var(--gold)}
+.tc{background:var(--cd);border:1px solid var(--cb);color:var(--cyan)}
+.tl{background:var(--ld);border:1px solid var(--lb);color:var(--lime)}
+.tr{background:var(--rd);border:1px solid var(--rb);color:var(--rose)}
+.tf{background:var(--ink4);border:1px solid var(--fa);color:var(--mu)}
+.btn{cursor:pointer;font-family:var(--sans);font-weight:600;border:none;transition:all .18s;display:flex;align-items:center;justify-content:center;gap:7px}
+.btn:active{transform:scale(.97)}
+.bg{background:var(--gold);color:#000;border-radius:13px}
+.bgh{background:var(--ink4);border:1px solid var(--fa);color:var(--w);border-radius:13px}
+.br{background:var(--rd);border:1px solid var(--rb);color:var(--rose);border-radius:13px}
+.sl{font-size:10px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px}
+.sep{height:1px;background:var(--fa);margin:10px 0}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes ps{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.2);opacity:.6}}
+@keyframes gp{0%,100%{box-shadow:0 0 0 0 rgba(57,217,138,.4)}50%{box-shadow:0 0 0 9px rgba(57,217,138,0)}}
+@keyframes su{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+@keyframes tk{0%,100%{opacity:1}50%{opacity:.25}}
+@keyframes dash{0%{stroke-dashoffset:226}100%{stroke-dashoffset:0}}
+@keyframes ticker{0%{transform:translateX(100%)}100%{transform:translateX(-100%)}}
+.sp{animation:spin 1s linear infinite}
+.pu{animation:ps 1.5s ease infinite}
+.gw{animation:gp 1.8s ease infinite}
+.tk{animation:tk 1s ease infinite}
+.rbar{height:5px;background:var(--ink4);border-radius:3px;overflow:hidden}
+.rf{height:100%;border-radius:3px;transition:width 1.4s cubic-bezier(.22,1,.36,1)}
+.nb{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;z-index:100;background:rgba(8,6,14,.94);backdrop-filter:blur(22px);border-top:1px solid var(--fa);padding:8px 4px 20px;display:flex;justify-content:space-around}
+.ni{display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 10px;cursor:pointer;border-radius:11px;transition:background .2s;min-width:52px}
+.ni.a{background:var(--gd)}
+.ni i{font-size:17px;color:var(--mu);transition:color .2s}
+.ni.a i{color:var(--gold)}
+.nl{font-size:9px;font-weight:700;color:var(--mu);letter-spacing:.4px;text-transform:uppercase;transition:color .2s}
+.ni.a .nl{color:var(--gold)}
+.nd{position:absolute;top:1px;right:1px;width:6px;height:6px;background:var(--rose);border-radius:50%;border:1.5px solid var(--ink)}
+.inp{background:var(--ink4);border:1px solid var(--fa);border-radius:11px;padding:12px 15px;font-size:14px;color:var(--w);font-family:var(--sans);width:100%;outline:none}
+.inp:focus{border-color:var(--gb)}
+.ph{display:sticky;top:0;z-index:50;background:var(--ink2);border-bottom:1px solid var(--fa);padding:16px 20px}
+.sb{font-size:22px;font-weight:800;letter-spacing:-.5px;font-family:var(--disp)}
+.mm{background:var(--ink4);border-radius:16px;height:155px;position:relative;overflow:hidden;border:1px solid var(--fa)}
+.mg{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.03) 1px,transparent 1px);background-size:22px 22px}
+.cb2{padding:11px 14px;border-radius:13px;font-size:13px;line-height:1.6;max-width:88%}
+.ci{background:var(--ink4);border-radius:13px 13px 13px 4px}
+.co{background:var(--gd);border:1px solid var(--gb);border-radius:13px 13px 4px 13px}
+.lb{padding:5px 9px;border-radius:7px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid var(--fa);background:var(--ink4);color:var(--mu);transition:all .15s}
+.lb.a{background:var(--gd);border-color:var(--gb);color:var(--gold)}
+.gb2{background-image:linear-gradient(var(--fa) 1px,transparent 1px),linear-gradient(90deg,var(--fa) 1px,transparent 1px);background-size:28px 28px}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {useState,useEffect,useRef} = React;
+
+const L={
+en:{app:'ZeroLoss',tag:'Income never goes to zero.',get:'Get Protected',demo:'Demo',how:'How It Works',
+  s1:'Disruption detected',s2:'Claim filed',s3:'You get paid',
+  d1:'AI monitors 24/7',d2:'No paperwork. Auto.',d3:'UPI in 8 seconds',
+  w1:'Workers',w2:'Payout time',w3:'Coverage',
+  home:'Home',wx:'Weather',pay:'Payouts',alrt:'Alerts',supp:'More',
+  pol:'Active Policy',inc:'Protected Income',prem:'Premium',
+  zone:'Zone Conditions',sim:'Simulate Monsoon Event',
+  chk:'Checking claim...',app2:'Claim Approved & Paid',
+  rs:'Risk Score',med:'Medium-High',
+  ph:'Payout History',tot:'Total Earned Back',
+  ga:'Govt Alerts',act:'Active',past:'Past',
+  sup:'Support',hi:'Hello Arjun! How can I help?',
+  ac:'Admin Console',ss:'System Status',fd:'Fraud Defense',mc:'Simulate Market Crash',
+  blk:'Claims Blocked',prt:'Pool Protected',
+  nm:'Full Name',ph2:'Phone',inc2:'Daily Income',zo:'City & Zone',up:'UPI ID',
+  calc:'Calculate Premium',reg:'Register',
+  lw:'Live Weather',rf:'Rainfall',aq:'Air Quality',wd:'Wind',tp:'Temp',
+  tr2:'Payout Triggers'},
+hi:{app:'ज़ीरोलॉस',tag:'आमदनी कभी शून्य नहीं होगी।',get:'सुरक्षित हों',demo:'डेमो',how:'यह कैसे काम करता है',
+  s1:'व्यवधान का पता चला',s2:'दावा दर्ज हुआ',s3:'पैसे मिले',
+  d1:'AI 24/7 निगरानी करता है',d2:'कोई कागज नहीं। स्वचालित।',d3:'8 सेकंड में UPI',
+  w1:'कामगार',w2:'भुगतान समय',w3:'कवरेज',
+  home:'होम',wx:'मौसम',pay:'भुगतान',alrt:'अलर्ट',supp:'और',
+  pol:'सक्रिय पॉलिसी',inc:'सुरक्षित आय',prem:'प्रीमियम',
+  zone:'क्षेत्र की स्थिति',sim:'मानसून घटना सिमुलेट करें',
+  chk:'दावे की जाँच...',app2:'दावा स्वीकृत हुआ',
+  rs:'जोखिम स्कोर',med:'मध्यम-उच्च',
+  ph:'भुगतान इतिहास',tot:'कुल वापस मिला',
+  ga:'सरकारी अलर्ट',act:'सक्रिय',past:'पुराने',
+  sup:'सहायता',hi:'नमस्ते अर्जुन!',
+  ac:'एडमिन कंसोल',ss:'सिस्टम स्थिति',fd:'धोखाधड़ी रक्षा',mc:'मार्केट क्रैश सिमुलेट',
+  blk:'दावे ब्लॉक',prt:'पूल सुरक्षित',
+  nm:'पूरा नाम',ph2:'फ़ोन',inc2:'दैनिक आय',zo:'शहर',up:'UPI ID',
+  calc:'प्रीमियम निकालें',reg:'पंजीकरण',
+  lw:'लाइव मौसम',rf:'वर्षा',aq:'वायु गुणवत्ता',wd:'हवा',tp:'तापमान',
+  tr2:'पेआउट ट्रिगर'},
+te:{app:'జీరోలాస్',tag:'ఆదాయం ఎప్పుడూ శూన్యం కాదు.',get:'రక్షణ పొందండి',demo:'డెమో',how:'ఇది ఎలా పనిచేస్తుంది',
+  s1:'విఘ్నం గుర్తించబడింది',s2:'క్లెయిమ్ దాఖలు',s3:'డబ్బు వచ్చింది',
+  d1:'AI 24/7 పర్యవేక్షిస్తుంది',d2:'పేపర్‌వర్క్ లేదు.',d3:'8 సెకన్లలో UPI',
+  w1:'కార్మికులు',w2:'చెల్లింపు వేగం',w3:'కవరేజ్',
+  home:'హోమ్',wx:'వాతావరణం',pay:'చెల్లింపులు',alrt:'హెచ్చరికలు',supp:'మరిన్ని',
+  pol:'క్రియాశీల పాలసీ',inc:'రక్షిత ఆదాయం',prem:'ప్రీమియం',
+  zone:'జోన్ పరిస్థితులు',sim:'రుతుపవన సంఘటన',
+  chk:'క్లెయిమ్ తనిఖీ...',app2:'క్లెయిమ్ ఆమోదించబడింది',
+  rs:'రిస్క్ స్కోర్',med:'మధ్యమ-అధిక',
+  ph:'చెల్లింపు చరిత్ర',tot:'మొత్తం తిరిగి సంపాదించారు',
+  ga:'ప్రభుత్వ హెచ్చరికలు',act:'క్రియాశీల',past:'గత',
+  sup:'మద్దతు',hi:'నమస్కారం అర్జున్!',
+  ac:'అడ్మిన్ కన్సోల్',ss:'సిస్టమ్ స్థితి',fd:'మోసం రక్షణ',mc:'మార్కెట్ క్రాష్',
+  blk:'నిరోధించబడిన క్లెయిమ్‌లు',prt:'పూల్ రక్షించబడింది',
+  nm:'పూర్తి పేరు',ph2:'ఫోన్',inc2:'రోజువారీ ఆదాయం',zo:'నగరం',up:'UPI ID',
+  calc:'ప్రీమియం లెక్కించండి',reg:'నమోదు',
+  lw:'లైవ్ వాతావరణం',rf:'వర్షపాతం',aq:'వాయు నాణ్యత',wd:'గాలి',tp:'ఉష్ణోగ్రత',
+  tr2:'పేఔట్ ట్రిగ్గర్‌లు'}
+};
+
+const Hdr=({title,sub,back,onBack,right})=>(
+  <div className="ph">
+    <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start'}}>
+      <div style={{display:'flex',alignItems:'center',gap:10}}>
+        {back&&<button className="bgh btn" style={{width:34,height:34,padding:0,borderRadius:9,flexShrink:0}} onClick={onBack}><i className="fa-solid fa-chevron-left" style={{fontSize:12}}/></button>}
+        <div><div className="sb">{title}</div>{sub&&<div style={{fontSize:11,color:'var(--mu)',marginTop:2}}>{sub}</div>}</div>
+      </div>
+      {right}
+    </div>
+  </div>
+);
+
+/* LANDING */
+const Landing=({go,lang,setLang})=>{
+  const t=L[lang];
+  return(
+    <div className="pv on">
+      <div style={{padding:'12px 20px',display:'flex',justifyContent:'space-between',alignItems:'center',borderBottom:'1px solid var(--fa)',background:'var(--ink2)'}}>
+        <div style={{display:'flex',alignItems:'center',gap:10}}>
+          <div style={{width:32,height:32,background:'var(--gold)',borderRadius:9,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'var(--disp)',fontWeight:800,fontSize:13,color:'#000'}}>ZL</div>
+          <span style={{fontFamily:'var(--disp)',fontWeight:800,fontSize:17,letterSpacing:-.5}}>{t.app}</span>
+        </div>
+        <div style={{display:'flex',gap:4}}>
+          {[['en','EN'],['hi','हि'],['te','తె']].map(([k,l])=><button key={k} className={`lb ${lang===k?'a':''}`} onClick={()=>setLang(k)}>{l}</button>)}
+        </div>
+      </div>
+      <div className="gb2" style={{padding:'40px 22px 32px',position:'relative',overflow:'hidden'}}>
+        <div style={{position:'absolute',top:-50,right:-50,width:200,height:200,borderRadius:'50%',background:'radial-gradient(circle,rgba(245,166,35,.18) 0%,transparent 70%)',pointerEvents:'none'}}/>
+        <div style={{position:'absolute',bottom:-60,left:-30,width:160,height:160,borderRadius:'50%',background:'radial-gradient(circle,rgba(0,212,255,.1) 0%,transparent 70%)',pointerEvents:'none'}}/>
+        <span className="tag tg" style={{marginBottom:18,display:'inline-flex'}}>
+          <span style={{width:5,height:5,borderRadius:'50%',background:'var(--gold)',animation:'ps 1.4s infinite'}}/>
+          Guidewire DEVTrails 2026
+        </span>
+        <div style={{fontFamily:'var(--disp)',fontSize:36,fontWeight:800,letterSpacing:-1.4,lineHeight:1.12,marginBottom:14}}>
+          {lang==='en'?<>Income <span style={{color:'var(--gold)'}}>never</span> goes to zero.</>:lang==='hi'?<>आमदनी कभी <span style={{color:'var(--gold)'}}>शून्य</span> नहीं होगी।</>:<>ఆదాయం ఎప్పుడూ <span style={{color:'var(--gold)'}}>శూన్యం</span> కాదు.</>}
+        </div>
+        <div style={{fontSize:14,color:'var(--mu)',lineHeight:1.72,marginBottom:26}}>
+          {lang==='en'?'15 million gig workers. Zero income protection. Until now.':lang==='hi'?'1.5 करोड़ गिग वर्कर्स। अब तक शून्य सुरक्षा।':'1.5 కోట్ల గిగ్ వర్కర్లు. ఇప్పటి వరకు సున్నా రక్షణ.'}
+        </div>
+        <div style={{display:'flex',gap:10}}>
+          <button className="bg btn" style={{flex:1,padding:'15px',fontSize:15}} onClick={()=>go('register')}>
+            <i className="fa-solid fa-shield-halved"/>{t.get}
+          </button>
+          <button className="bgh btn" style={{padding:'15px 20px',fontSize:15}} onClick={()=>go('dashboard')}>
+            <i className="fa-solid fa-play"/>
+          </button>
+        </div>
+      </div>
+      <div style={{padding:'0 20px 20px'}}>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:8,margin:'18px 0'}}>
+          {[['15M',t.w1,'var(--gold)'],['8s',t.w2,'var(--lime)'],['₹4K',t.w3,'var(--cyan)']].map(([v,l,c])=>(
+            <div key={l} style={{background:'var(--ink3)',border:'1px solid var(--fa)',borderRadius:13,padding:'14px 8px',textAlign:'center'}}>
+              <div style={{fontFamily:'var(--disp)',fontSize:20,fontWeight:800,color:c}}>{v}</div>
+              <div style={{fontSize:9,color:'var(--mu)',marginTop:3,textTransform:'uppercase',letterSpacing:.5}}>{l}</div>
+            </div>
+          ))}
+        </div>
+        <div className="sl">{t.how}</div>
+        {[['fa-satellite-dish',t.s1,t.d1,'var(--cyan)'],['fa-file-invoice',t.s2,t.d2,'var(--gold)'],['fa-money-bill-transfer',t.s3,t.d3,'var(--lime)']].map(([ic,ti,su,c],i,a)=>(
+          <div key={ti} style={{display:'flex',gap:13,alignItems:'flex-start'}}>
+            <div style={{display:'flex',flexDirection:'column',alignItems:'center',width:36,flexShrink:0}}>
+              <div style={{width:36,height:36,borderRadius:10,display:'flex',alignItems:'center',justifyContent:'center',fontSize:14,color:c,background:`rgba(${c==='var(--cyan)'?'0,212,255':c==='var(--gold)'?'245,166,35':'57,217,138'},.1)`,border:`1px solid rgba(${c==='var(--cyan)'?'0,212,255':c==='var(--gold)'?'245,166,35':'57,217,138'},.22)`}}>
+                <i className={`fa-solid ${ic}`}/>
+              </div>
+              {i<a.length-1&&<div style={{width:1,height:24,background:'var(--fa)',margin:'4px 0'}}/>}
+            </div>
+            <div style={{paddingBottom:i<a.length-1?16:0}}>
+              <div style={{fontWeight:700,fontSize:14,marginBottom:2}}>{ti}</div>
+              <div style={{fontSize:12,color:'var(--mu)'}}>{su}</div>
+            </div>
+          </div>
+        ))}
+        <div className="card cg" style={{padding:'18px',marginTop:22}}>
+          <div style={{fontSize:10,color:'var(--gold)',fontWeight:700,letterSpacing:1,marginBottom:8}}>THE STORY</div>
+          <div style={{fontSize:13,fontStyle:'italic',lineHeight:1.75,marginBottom:8}}>"Bhaiya, niklo toh accident ka darr, mat niklo toh ghar ka kiraya kaun bharega."</div>
+          <div style={{fontSize:11,color:'var(--mu)'}}>— Arjun, Zomato partner, Bangalore</div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* REGISTER */
+const Register=({go,lang})=>{
+  const t=L[lang];
+  const [step,setStep]=useState(0);
+  const [done,setDone]=useState([]);
+  const chks=lang==='en'
+    ?['Fetching flood zone data...','Analyzing monsoon patterns...','Scoring AQI trends...','Running XGBoost model...','Finalizing premium...']
+    :lang==='hi'
+    ?['बाढ़ क्षेत्र डेटा...','मानसून पैटर्न...','AQI ट्रेंड स्कोरिंग...','XGBoost मॉडल...','प्रीमियम अंतिम...']
+    :['వరద జోన్ డేటా...','రుతుపవన నమూనాలు...','AQI ట్రెండ్...','XGBoost మోడల్...','ప్రీమియం ఖరారు...'];
+  const go2=()=>{
+    setStep(1);
+    chks.forEach((_,i)=>setTimeout(()=>setDone(d=>[...d,i]),i*520+200));
+    setTimeout(()=>setStep(2),chks.length*520+500);
+    setTimeout(()=>go('dashboard'),chks.length*520+2200);
+  };
+  return(
+    <div className="pv on" style={{minHeight:'100vh',background:'var(--ink2)'}}>
+      <Hdr title={t.reg} sub={lang==='en'?'2 min setup':lang==='hi'?'2 मिनट':'2 నిమిషాలు'} back onBack={()=>go('landing')}/>
+      <div style={{padding:'18px'}}>
+        {step===0&&<>
+          {[[t.nm,'Arjun Kumar'],[t.ph2,'+91 98765 43210'],[t.inc2,'₹1,000/day']].map(([l,v])=>(
+            <div key={l} style={{marginBottom:13}}>
+              <div style={{fontSize:10,color:'var(--mu)',fontWeight:700,textTransform:'uppercase',letterSpacing:.6,marginBottom:5}}>{l}</div>
+              <div style={{background:'var(--ink4)',border:'1px solid var(--fa)',borderRadius:11,padding:'13px 15px',fontSize:15,fontWeight:500}}>{v}</div>
+            </div>
+          ))}
+          <div style={{marginBottom:13}}>
+            <div style={{fontSize:10,color:'var(--mu)',fontWeight:700,textTransform:'uppercase',letterSpacing:.6,marginBottom:5}}>{t.zo}</div>
+            <div style={{background:'var(--gd)',border:'1px solid var(--gb)',borderRadius:11,padding:'13px 15px',fontSize:14,fontWeight:500,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+              Bangalore — Koramangala <span className="tag tg">Zone B</span>
+            </div>
+          </div>
+          <div style={{marginBottom:13}}>
+            <div style={{fontSize:10,color:'var(--mu)',fontWeight:700,textTransform:'uppercase',letterSpacing:.6,marginBottom:5}}>Platform</div>
+            <div style={{display:'flex',gap:8}}>
+              {['Zomato','Swiggy'].map(p=><div key={p} style={{flex:1,background:'var(--gd)',border:'1px solid var(--gb)',borderRadius:11,padding:'12px',textAlign:'center',fontSize:13,fontWeight:700,color:'var(--gold)'}}><i className="fa-solid fa-check" style={{marginRight:6}}/>{p}</div>)}
+            </div>
+          </div>
+          <div style={{marginBottom:22}}>
+            <div style={{fontSize:10,color:'var(--mu)',fontWeight:700,textTransform:'uppercase',letterSpacing:.6,marginBottom:5}}>{t.up}</div>
+            <div style={{background:'var(--ink4)',border:'1px solid var(--fa)',borderRadius:11,padding:'13px 15px',fontSize:13,fontFamily:'monospace',color:'var(--cyan)'}}>arjun.kumar@upi</div>
+          </div>
+          <button className="bg btn" style={{width:'100%',padding:'15px',fontSize:15}} onClick={go2}>
+            <i className="fa-solid fa-brain"/>{t.calc}
+          </button>
+        </>}
+        {step===1&&<div style={{display:'flex',flexDirection:'column',alignItems:'center',minHeight:'60vh',justifyContent:'center',gap:20}}>
+          <div style={{position:'relative',width:78,height:78}}>
+            <div style={{position:'absolute',inset:0,borderRadius:'50%',background:'var(--gd)',border:'2px solid var(--gb)',display:'flex',alignItems:'center',justifyContent:'center'}}>
+              <i className="fa-solid fa-brain" style={{fontSize:28,color:'var(--gold)'}}/>
+            </div>
+            <svg style={{position:'absolute',inset:0,width:78,height:78}} viewBox="0 0 78 78">
+              <circle cx="39" cy="39" r="35" fill="none" stroke="var(--gold)" strokeWidth="2" strokeLinecap="round" strokeDasharray="220" style={{animation:'dash 1.3s linear infinite'}}/>
+            </svg>
+          </div>
+          <div style={{textAlign:'center'}}>
+            <div style={{fontFamily:'var(--disp)',fontSize:20,fontWeight:800}}>XGBoost Running</div>
+            <div style={{fontSize:12,color:'var(--mu)',marginTop:3}}>14 risk factors</div>
+          </div>
+          <div className="card" style={{width:'100%',padding:'15px 17px'}}>
+            {chks.map((c,i)=>(
+              <div key={c} style={{display:'flex',alignItems:'center',gap:9,padding:'7px 0',borderBottom:i<chks.length-1?'1px solid var(--fa)':'none'}}>
+                <div style={{width:15,height:15,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                  {done.includes(i)?<i className="fa-solid fa-check" style={{fontSize:10,color:'var(--lime)'}}/>:
+                   done.length===i?<i className="fa-solid fa-circle-notch sp" style={{fontSize:10,color:'var(--gold)'}}/>:
+                   <div style={{width:4,height:4,borderRadius:'50%',background:'var(--fa)'}}/>}
+                </div>
+                <span style={{fontSize:12,color:done.includes(i)?'var(--w)':'var(--mu)'}}>{c}</span>
+              </div>
+            ))}
+          </div>
+        </div>}
+        {step===2&&<div style={{display:'flex',flexDirection:'column',alignItems:'center',minHeight:'60vh',justifyContent:'center',gap:16,animation:'su .4s ease both'}}>
+          <div className="gw" style={{width:70,height:70,borderRadius:'50%',background:'var(--ld)',border:'2px solid var(--lime)',display:'flex',alignItems:'center',justifyContent:'center'}}>
+            <i className="fa-solid fa-check" style={{fontSize:28,color:'var(--lime)'}}/>
+          </div>
+          <div style={{textAlign:'center'}}>
+            <div style={{fontFamily:'var(--disp)',fontSize:24,fontWeight:800,color:'var(--lime)'}}>68 / 100</div>
+            <div style={{fontSize:12,color:'var(--mu)',marginTop:3}}>{t.rs} · {t.med}</div>
+          </div>
+          <div className="card cg" style={{width:'100%',padding:'22px',textAlign:'center'}}>
+            <div style={{fontSize:10,color:'var(--mu)',marginBottom:5,textTransform:'uppercase',letterSpacing:.6}}>{t.prem}</div>
+            <div style={{fontFamily:'var(--disp)',fontSize:52,fontWeight:800,color:'var(--gold)',letterSpacing:-2}}>₹64</div>
+            <div style={{fontSize:13,color:'var(--mu)'}}>covers up to <strong style={{color:'var(--w)'}}>₹4,000/week</strong></div>
+            <div style={{fontSize:11,color:'var(--fa)',marginTop:6}}>Auto-renews every Monday</div>
+          </div>
+          <span className="tag tl"><i className="fa-solid fa-circle-notch sp"/>Activating…</span>
+        </div>}
+      </div>
+    </div>
+  );
+};
+
+/* DASHBOARD */
+const DashPage=({go,lang,weather,claimStatus,onSim})=>{
+  const t=L[lang]; const tr=weather.rain>50;
+  return(
+    <div className="pv on">
+      <div style={{background:'var(--ink2)',borderBottom:'1px solid var(--fa)',padding:'15px 20px'}}>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+          <div>
+            <div style={{fontSize:11,color:'var(--mu)'}}>{lang==='en'?'Welcome back,':lang==='hi'?'वापस स्वागत,':'తిరిగి స్వాగతం,'}</div>
+            <div style={{fontFamily:'var(--disp)',fontSize:21,fontWeight:800,letterSpacing:-.5}}>Arjun <span style={{fontSize:13,color:'var(--mu)',fontFamily:'var(--sans)',fontWeight:400}}>· Zomato</span></div>
+          </div>
+          <div style={{display:'flex',gap:7,alignItems:'center'}}>
+            <span className="tag tl"><span style={{width:5,height:5,borderRadius:'50%',background:'var(--lime)',animation:'ps 1.4s infinite'}}/>Live</span>
+            <button className="bgh btn" style={{padding:'7px 11px',fontSize:11,borderRadius:8}} onClick={()=>go('admin')}><i className="fa-solid fa-shield-halved" style={{fontSize:11}}/></button>
+          </div>
+        </div>
+      </div>
+      <div style={{padding:'15px'}}>
+        {/* Hero policy */}
+        <div style={{background:'linear-gradient(135deg,#14111F,#0E1520)',border:'1px solid var(--gb)',borderRadius:20,padding:'20px',marginBottom:13,position:'relative',overflow:'hidden'}}>
+          <div style={{position:'absolute',top:-25,right:-25,width:120,height:120,borderRadius:'50%',background:'radial-gradient(circle,rgba(245,166,35,.14) 0%,transparent 70%)'}}/>
+          <div style={{display:'flex',justifyContent:'space-between',marginBottom:14,position:'relative'}}>
+            <div>
+              <div style={{fontSize:10,color:'var(--mu)',letterSpacing:.7,textTransform:'uppercase',marginBottom:5}}>{t.pol}</div>
+              <span className="tag tl"><span style={{width:5,height:5,borderRadius:'50%',background:'var(--lime)',animation:'ps 1.4s infinite'}}/>Active</span>
+            </div>
+            <div style={{textAlign:'right'}}>
+              <div style={{fontSize:10,color:'var(--mu)'}}>{t.prem}</div>
+              <div style={{fontFamily:'var(--disp)',fontSize:18,fontWeight:800}}>₹64<span style={{fontSize:11,color:'var(--mu)',fontFamily:'var(--sans)',fontWeight:400}}>/wk</span></div>
+            </div>
+          </div>
+          <div style={{position:'relative'}}>
+            <div style={{fontSize:10,color:'var(--mu)',textTransform:'uppercase',letterSpacing:.7,marginBottom:3}}>{t.inc}</div>
+            <div style={{fontFamily:'var(--disp)',fontSize:46,fontWeight:800,letterSpacing:-2,color:'var(--lime)',lineHeight:1}}>₹4,000</div>
+            <div style={{fontSize:10,color:'var(--mu)',marginTop:5}}>ZL-2026-BLR-07423 · expires 23 Mar</div>
+          </div>
+        </div>
+        {/* Risk bar */}
+        <div className="card" style={{padding:'13px 15px',marginBottom:12}}>
+          <div style={{display:'flex',justifyContent:'space-between',marginBottom:6}}>
+            <span style={{fontSize:12,fontWeight:600}}>{t.rs}</span>
+            <span style={{fontSize:13,fontWeight:800,color:'var(--gold)'}}>68/100</span>
+          </div>
+          <div className="rbar"><div className="rf" style={{width:'68%',background:'linear-gradient(90deg,var(--lime),var(--gold))'}}/></div>
+          <div style={{display:'flex',justifyContent:'space-between',marginTop:4,fontSize:9,color:'var(--mu)'}}>
+            <span>Low</span><span>Medium</span><span>High</span>
+          </div>
+        </div>
+        {/* Weather */}
+        <div className={`card ${tr?'cr':'cc'}`} style={{padding:'16px',marginBottom:12,transition:'all .5s'}}>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:10}}>
+            <div>
+              <div style={{fontSize:10,color:'var(--mu)',textTransform:'uppercase',letterSpacing:.7,marginBottom:4}}>Rainfall 3hr</div>
+              <div style={{fontFamily:'var(--disp)',fontSize:44,fontWeight:800,letterSpacing:-1.5,color:tr?'var(--rose)':'var(--cyan)',lineHeight:1}}>{weather.rain}<span style={{fontSize:16,color:'var(--mu)',fontFamily:'var(--sans)'}}>mm</span></div>
+            </div>
+            <i className={`fa-solid ${tr?'fa-cloud-showers-heavy pu':'fa-cloud-sun'}`} style={{fontSize:42,color:tr?'var(--rose)':'var(--cyan)'}}/>
+          </div>
+          <div className="rbar"><div className="rf" style={{width:`${Math.min(weather.rain/65*100,100)}%`,background:tr?'var(--rose)':'var(--cyan)'}}/></div>
+          <div style={{display:'flex',justifyContent:'space-between',marginTop:4}}>
+            <span style={{fontSize:10,color:'var(--mu)'}}>Threshold: 50mm</span>
+            {tr&&<span style={{fontSize:10,fontWeight:700,color:'var(--rose)',animation:'tk 1s infinite'}}>⚠ EXCEEDED</span>}
+          </div>
+        </div>
+        {!claimStatus&&!tr&&(
+          <button className="bgh btn" style={{width:'100%',padding:'13px',marginBottom:12,fontSize:13,borderColor:'rgba(0,212,255,.22)',color:'var(--cyan)'}} onClick={onSim}>
+            <i className="fa-solid fa-play-circle"/>{t.sim}
+          </button>
+        )}
+        {claimStatus==='checking'&&(
+          <div style={{background:'rgba(234,179,8,.08)',border:'1px solid rgba(234,179,8,.28)',borderRadius:13,padding:'15px',marginBottom:12,display:'flex',gap:11,alignItems:'center'}}>
+            <i className="fa-solid fa-circle-notch sp" style={{fontSize:20,color:'var(--gold)',flexShrink:0}}/>
+            <div><div style={{fontWeight:700,color:'var(--gold)',fontSize:14}}>{t.chk}</div><div style={{fontSize:11,color:'var(--mu)',marginTop:1}}>Isolation Forest · Anti-spoofing</div></div>
+          </div>
+        )}
+        {claimStatus==='approved'&&(
+          <div className="card cl" style={{padding:'17px',marginBottom:12,animation:'su .4s ease both'}}>
+            <div style={{display:'flex',gap:9,alignItems:'center',marginBottom:13}}>
+              <div className="gw" style={{width:36,height:36,borderRadius:'50%',background:'var(--ld)',border:'1.5px solid var(--lime)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                <i className="fa-solid fa-check" style={{fontSize:15,color:'var(--lime)'}}/>
+              </div>
+              <div><div style={{fontWeight:700,color:'var(--lime)',fontSize:14}}>{t.app2}</div><div style={{fontSize:11,color:'var(--mu)'}}>5 checks · 8s</div></div>
+            </div>
+            {[['GPS Jitter','Natural ✓','lime'],['Velocity','Clean ✓','lime'],['Device','Unique ✓','lime'],['Platform','No delivery ✓','lime'],['IF Score','0.08 ✓','lime']].map(([k,v,c])=>(
+              <div key={k} style={{display:'flex',justifyContent:'space-between',padding:'6px 0',borderBottom:'1px solid var(--fa)',fontSize:12}}>
+                <span style={{color:'var(--mu)'}}>{k}</span><span style={{color:`var(--${c})`,fontWeight:600}}>{v}</span>
+              </div>
+            ))}
+            <div style={{marginTop:13,background:'var(--ink)',borderRadius:11,padding:'13px 15px',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+              <div>
+                <div style={{fontSize:9,color:'var(--mu)',textTransform:'uppercase',letterSpacing:.5}}>Payout</div>
+                <div style={{fontFamily:'var(--disp)',fontSize:28,fontWeight:800,color:'var(--lime)',letterSpacing:-.5}}>₹800</div>
+              </div>
+              <div style={{textAlign:'right'}}>
+                <div style={{background:'var(--cd)',border:'1px solid var(--cb)',borderRadius:7,padding:'4px 10px',fontSize:11,fontWeight:700,color:'var(--cyan)',fontFamily:'monospace'}}>UPI</div>
+                <div style={{fontSize:9,color:'var(--mu)',marginTop:2}}>arjun.kumar@upi</div>
+              </div>
+            </div>
+          </div>
+        )}
+        {/* Quick cards */}
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:9}}>
+          {[['fa-cloud-bolt',t.wx,tr?'Alert active':'All clear','var(--cyan)',tr,'weather'],
+            ['fa-bell',t.alrt,'2 active','var(--gold)',true,'alerts'],
+            ['fa-wallet',t.pay,'₹2,400 back','var(--lime)',false,'payouts'],
+            ['fa-headset',t.supp,'AI assistant','var(--mu)',false,'support']
+          ].map(([ic,ti,su,c,nt,pg])=>(
+            <div key={pg} className="card" style={{padding:'13px',cursor:'pointer',position:'relative'}} onClick={()=>go(pg)}>
+              {nt&&<div className="nd"/>}
+              <i className={`fa-solid ${ic}`} style={{fontSize:18,color:c,marginBottom:8}}/>
+              <div style={{fontSize:12,fontWeight:600}}>{ti}</div>
+              <div style={{fontSize:10,color:nt&&pg!=='weather'?'var(--rose)':'var(--mu)',marginTop:2}}>{su}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* WEATHER */
+const WxPage=({lang,weather})=>{
+  const t=L[lang];
+  const [city,setCity]=useState('Bangalore');
+  const cities=['Bangalore','Mumbai','Delhi','Hyderabad','Chennai'];
+  const D={Bangalore:{rain:weather.rain,aqi:weather.aqi,wind:weather.rain>50?62:18,temp:28,st:weather.rain>50?'Flood Alert':'Clear'},
+    Mumbai:{rain:22,aqi:145,wind:28,temp:31,st:'Moderate Rain'},
+    Delhi:{rain:5,aqi:312,wind:15,temp:34,st:'Poor AQI'},
+    Hyderabad:{rain:35,aqi:167,wind:24,temp:33,st:'Light Rain'},
+    Chennai:{rain:8,aqi:88,wind:19,temp:30,st:'Clear'}};
+  const d=D[city]; const al=d.rain>50||d.aqi>400||d.wind>60;
+  return(
+    <div className="pv on">
+      <Hdr title={t.lw} sub={city}/>
+      <div style={{padding:'14px'}}>
+        <div style={{display:'flex',gap:6,overflowX:'auto',marginBottom:14,paddingBottom:2}}>
+          {cities.map(c=>(
+            <button key={c} onClick={()=>setCity(c)} style={{padding:'6px 13px',borderRadius:20,border:`1px solid ${c===city?'var(--gb)':'var(--fa)'}`,background:c===city?'var(--gd)':'var(--ink4)',color:c===city?'var(--gold)':'var(--mu)',fontSize:12,fontWeight:600,cursor:'pointer',whiteSpace:'nowrap',fontFamily:'var(--sans)',transition:'all .15s'}}>
+              {c}
+            </button>
+          ))}
+        </div>
+        <div className={`card ${al?'cr':'cc'}`} style={{padding:'22px',marginBottom:13,textAlign:'center',position:'relative',overflow:'hidden'}}>
+          <i className={`fa-solid ${d.rain>50?'fa-cloud-showers-heavy':d.aqi>300?'fa-smog':'fa-sun'}`} style={{fontSize:52,color:d.rain>50?'var(--rose)':d.aqi>300?'var(--gold)':'var(--cyan)',marginBottom:10,display:'block'}}/>
+          <div style={{fontFamily:'var(--disp)',fontSize:40,fontWeight:800,letterSpacing:-1.5,marginBottom:6}}>{d.temp}°C</div>
+          <span className={`tag ${al?'tr':'tc'}`}>{d.st}</span>
+        </div>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:9,marginBottom:13}}>
+          {[[t.rf,`${d.rain}mm`,d.rain>50?'var(--rose)':'var(--cyan)','fa-droplet'],
+            [t.aq,`${d.aqi}`,d.aqi>300?'var(--rose)':d.aqi>150?'var(--gold)':'var(--lime)','fa-wind'],
+            [t.wd,`${d.wind}km/h`,d.wind>60?'var(--rose)':'var(--w)','fa-tornado'],
+            [t.tp,`${d.temp}°C`,d.temp>43?'var(--rose)':'var(--w)','fa-temperature-high']
+          ].map(([l,v,c,ic])=>(
+            <div key={l} style={{background:'var(--ink3)',border:'1px solid var(--fa)',borderRadius:13,padding:'13px'}}>
+              <i className={`fa-solid ${ic}`} style={{fontSize:15,color:c,marginBottom:7}}/>
+              <div style={{fontFamily:'var(--disp)',fontSize:22,fontWeight:800,color:c}}>{v}</div>
+              <div style={{fontSize:10,color:'var(--mu)',marginTop:2,textTransform:'uppercase',letterSpacing:.5}}>{l}</div>
+            </div>
+          ))}
+        </div>
+        <div className="mm" style={{marginBottom:13}}>
+          <div className="mg"/>
+          <div style={{position:'absolute',top:'50%',left:'50%',transform:'translate(-50%,-50%)',width:70,height:70,borderRadius:'50%',border:'1px dashed var(--gb)',background:'var(--gd)'}}/>
+          <div style={{position:'absolute',top:'50%',left:'50%',transform:'translate(-50%,-50%)',width:120,height:120,borderRadius:'50%',border:'1px dashed rgba(255,75,110,.18)'}}/>
+          <div style={{position:'absolute',top:'50%',left:'50%',transform:'translate(-50%,-65%)',fontSize:22}}>📍</div>
+          <div style={{position:'absolute',bottom:8,left:10,fontSize:10,color:'var(--mu)',fontFamily:'monospace'}}>{city==='Bangalore'?'12.9716° N, 77.5946° E':city==='Mumbai'?'19.0760° N, 72.8777° E':city==='Delhi'?'28.6139° N, 77.2090° E':city==='Hyderabad'?'17.3850° N, 78.4867° E':'13.0827° N, 80.2707° E'}</div>
+          <div style={{position:'absolute',top:8,right:10}}><span className="tag tg">Zone B</span></div>
+        </div>
+        <div className="sl">{t.tr2}</div>
+        <div className="card" style={{padding:0,overflow:'hidden'}}>
+          {[['Rain > 50mm / 3hr','80% payout',d.rain>50],['Rain > 100mm / 6hr','100% payout',false],['AQI > 400','70% payout',d.aqi>400],['Wind > 60km/h','100% payout',d.wind>60],['Temp > 43°C','60% payout',d.temp>43]].map(([tr2,py,fi],i,a)=>(
+            <div key={tr2} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'11px 15px',borderBottom:i<a.length-1?'1px solid var(--fa)':'none',background:fi?'var(--rd)':'transparent',transition:'background .3s'}}>
+              <div><div style={{fontSize:12,fontWeight:600,color:fi?'var(--rose)':'var(--w)'}}>{tr2}</div><div style={{fontSize:10,color:'var(--mu)',marginTop:1}}>{py}</div></div>
+              <span className={`tag ${fi?'tr':'tf'}`}>{fi?'FIRING':'Watching'}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* PAYOUTS */
+const PayPage=({lang})=>{
+  const t=L[lang];
+  const P=[
+    {id:'ZL-2026-0891',dt:'19 Mar 2026',ev:'Extreme Rainfall',am:800,tm:'8s'},
+    {id:'ZL-2026-0754',dt:'12 Mar 2026',ev:'AQI > 400',am:560,tm:'11s'},
+    {id:'ZL-2026-0612',dt:'28 Feb 2026',ev:'City Curfew',am:1000,tm:'6s'},
+    {id:'ZL-2026-0501',dt:'15 Feb 2026',ev:'Flood Alert',am:1000,tm:'9s'},
+    {id:'ZL-2026-0347',dt:'3 Feb 2026',ev:'Platform Outage',am:480,tm:'14s'},
+  ];
+  const tot=P.reduce((s,p)=>s+p.am,0);
+  return(
+    <div className="pv on">
+      <Hdr title={t.ph} sub="arjun.kumar@upi"/>
+      <div style={{padding:'14px'}}>
+        <div className="card cl" style={{padding:'20px',marginBottom:15,textAlign:'center'}}>
+          <div style={{fontSize:10,color:'var(--mu)',marginBottom:4,textTransform:'uppercase',letterSpacing:.6}}>{t.tot}</div>
+          <div style={{fontFamily:'var(--disp)',fontSize:42,fontWeight:800,color:'var(--lime)',letterSpacing:-1.5}}>₹{tot.toLocaleString()}</div>
+          <div style={{fontSize:12,color:'var(--mu)',marginTop:4}}>{P.length} claims · avg ₹{Math.round(tot/P.length)}/claim</div>
+        </div>
+        {P.map((p,i)=>(
+          <div key={p.id} className="card" style={{padding:'15px',marginBottom:9,animation:`su .3s ease ${i*.06}s both`}}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:9}}>
+              <div>
+                <div style={{fontFamily:'monospace',fontSize:9,color:'var(--mu)',marginBottom:3}}>{p.id}</div>
+                <div style={{fontSize:14,fontWeight:600}}>{p.ev}</div>
+                <div style={{fontSize:11,color:'var(--mu)',marginTop:1}}>{p.dt}</div>
+              </div>
+              <div style={{textAlign:'right'}}>
+                <div style={{fontFamily:'var(--disp)',fontSize:22,fontWeight:800,color:'var(--lime)'}}>₹{p.am}</div>
+                <span className="tag tl" style={{marginTop:3}}>Paid</span>
+              </div>
+            </div>
+            <div style={{display:'flex',justifyContent:'space-between',background:'var(--ink4)',borderRadius:8,padding:'7px 11px'}}>
+              <span style={{fontSize:10,color:'var(--mu)'}}>Transfer time</span>
+              <span style={{fontSize:10,fontWeight:700,color:'var(--lime)'}}>{p.tm}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+/* ALERTS */
+const AlertsP=({lang})=>{
+  const t=L[lang];
+  const A=[
+    {src:'IMD',ti:'Red Alert — Heavy Rainfall',bo:'Bangalore, Mysore districts. Next 24 hours.',lv:'rose',tm:'2h ago'},
+    {src:'BBMP',ti:'Zone B Drainage Advisory',bo:'Koramangala storm water at 87% capacity.',lv:'gold',tm:'4h ago'},
+  ];
+  const B=[
+    {src:'IMD',ti:'Yellow Alert lifted',bo:'Conditions normalised in Bangalore South.',tm:'2 days ago'},
+    {src:'NDMA',ti:'Flood watch cancelled',bo:'Cauvery river levels receding.',tm:'5 days ago'},
+    {src:'BMC',ti:'Delivery zone reopened',bo:'Previously sealed zone now permitted.',tm:'1 week ago'},
+  ];
+  return(
+    <div className="pv on">
+      <Hdr title={t.ga} sub={lang==='en'?'IMD · NDMA · BBMP · State DMAs':lang==='hi'?'IMD · NDMA · BBMP':'IMD · NDMA · BBMP'}/>
+      <div style={{padding:'14px'}}>
+        <div style={{background:'var(--rd)',border:'1px solid var(--rb)',borderRadius:11,padding:'11px 14px',marginBottom:14,display:'flex',gap:9,alignItems:'center'}}>
+          <i className="fa-solid fa-triangle-exclamation tk" style={{color:'var(--rose)',fontSize:17,flexShrink:0}}/>
+          <div style={{fontSize:12,lineHeight:1.55}}>
+            {lang==='en'?'2 active alerts in your zone. Policy monitoring in real time.':lang==='hi'?'आपके क्षेत्र में 2 सक्रिय अलर्ट। पॉलिसी रियल टाइम में निगरानी कर रही है।':'మీ జోన్‌లో 2 క్రియాశీల హెచ్చరికలు. పాలసీ రియల్ టైమ్‌లో పర్యవేక్షిస్తోంది.'}
+          </div>
+        </div>
+        <div className="sl">{t.act} ({A.length})</div>
+        {A.map((a,i)=>(
+          <div key={i} className={`card ${a.lv==='rose'?'cr':'cg'}`} style={{padding:'15px',marginBottom:9}}>
+            <div style={{display:'flex',justifyContent:'space-between',marginBottom:7}}>
+              <span className={`tag ${a.lv==='rose'?'tr':'tg'}`}>{a.src}</span>
+              <span style={{fontSize:10,color:'var(--mu)'}}>{a.tm}</span>
+            </div>
+            <div style={{fontSize:14,fontWeight:700,marginBottom:3}}>{a.ti}</div>
+            <div style={{fontSize:12,color:'var(--mu)',lineHeight:1.55,marginBottom:10}}>{a.bo}</div>
+            <div style={{background:'var(--ink4)',borderRadius:8,padding:'7px 11px',fontSize:11,color:a.lv==='rose'?'var(--rose)':'var(--gold)'}}>
+              <i className="fa-solid fa-bolt" style={{marginRight:6}}/>
+              {lang==='en'?'Monitoring for payout trigger':lang==='hi'?'पेआउट ट्रिगर की निगरानी':'చెల్లింపు ట్రిగ్గర్ కోసం పర్యవేక్షణ'}
+            </div>
+          </div>
+        ))}
+        <div className="sl" style={{marginTop:18}}>{t.past}</div>
+        {B.map((b,i)=>(
+          <div key={i} className="card" style={{padding:'13px',marginBottom:7,opacity:.65}}>
+            <div style={{display:'flex',justifyContent:'space-between',marginBottom:5}}>
+              <span className="tag tf">{b.src}</span>
+              <span style={{fontSize:10,color:'var(--mu)'}}>{b.tm}</span>
+            </div>
+            <div style={{fontSize:13,fontWeight:600,marginBottom:2}}>{b.ti}</div>
+            <div style={{fontSize:11,color:'var(--mu)'}}>{b.bo}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+/* SUPPORT */
+const SuppPage=({lang})=>{
+  const t=L[lang];
+  const [msgs,setMsgs]=useState([{r:'b',tx:t.hi},{r:'b',tx:lang==='en'?'Ask me about your policy, claims, premiums, or how ZeroLoss works.':lang==='hi'?'पॉलिसी, दावे, प्रीमियम के बारे में पूछें।':'పాలసీ, క్లెయిమ్‌లు, ప్రీమియం గురించి అడగండి.'}]);
+  const [inp,setInp]=useState('');
+  const [typ,setTyp]=useState(false);
+  const ref=useRef(null);
+  const QA=lang==='en'
+    ?[['How does auto-claim work?','When rainfall crosses 50mm/3hr in your zone, a claim fires automatically. Isolation Forest runs 5 fraud checks in under a second. If clean, ₹800 hits your UPI in 8 seconds. Zero forms.'],
+      ['Why is my premium ₹64?','₹35 base × 1.6 risk (Zone B flood history, monsoon overlap) × 1.15 coverage. Koramangala has 9 climate events/year historically.'],
+      ['Can I pause my policy?','Yes, with one week notice before your Monday renewal. Tap Policy → Manage → Pause.']]
+    :lang==='hi'
+    ?[['ऑटो-क्लेम कैसे काम करता है?','50mm वर्षा होने पर क्लेम स्वचालित रूप से बनता है। Isolation Forest 1 सेकंड में 5 जाँच चलाता है। ₹800 8 सेकंड में UPI में।'],
+      ['मेरा प्रीमियम ₹64 क्यों?','₹35 बेस × 1.6 रिस्क × 1.15 कवरेज। कोरमंगला में 9 जलवायु घटनाएं/वर्ष।'],
+      ['क्या पॉलिसी पॉज कर सकता हूं?','हाँ, सोमवार नवीनीकरण से एक सप्ताह पहले। Policy → Manage → Pause।']]
+    :[['ఆటో-క్లెయిమ్ ఎలా పనిచేస్తుంది?','50mm దాటినప్పుడు క్లెయిమ్ స్వయంచాలకంగా సృష్టించబడుతుంది. Isolation Forest 1 సెకన్లో 5 చెక్కులు. ₹800 UPI కి 8 సెకన్లలో.'],
+      ['నా ప్రీమియం ₹64 ఎందుకు?','₹35 బేస్ × 1.6 రిస్క్ × 1.15 కవరేజ్. Koramangala లో సంవత్సరానికి 9 వాతావరణ సంఘటనలు.'],
+      ['పాలసీ పాజ్ చేయగలనా?','అవును, సోమవారం పునరుద్ధరణకు ఒక వారం ముందు. Policy → Manage → Pause.']];
+  const send=(txt)=>{
+    const m=txt||inp; if(!m.trim())return;
+    setMsgs(p=>[...p,{r:'u',tx:m}]); setInp(''); setTyp(true);
+    const match=QA.find(([q])=>m.toLowerCase().includes(q.toLowerCase().split(' ')[0].toLowerCase()));
+    setTimeout(()=>{
+      setTyp(false);
+      setMsgs(p=>[...p,{r:'b',tx:match?match[1]:lang==='en'?'I\'ll connect you to an agent. Call 1800-ZEROLOSS for urgent help.':lang==='hi'?'एजेंट से जोड़ूंगा। 1800-ZEROLOSS पर कॉल करें।':'ఏజెంట్‌కి కనెక్ట్ చేస్తాను. 1800-ZEROLOSS కి కాల్ చేయండి.'}]);
+      setTimeout(()=>ref.current?.scrollTo({top:9999,behavior:'smooth'}),50);
+    },1100);
+    setTimeout(()=>ref.current?.scrollTo({top:9999,behavior:'smooth'}),50);
+  };
+  return(
+    <div className="pv on" style={{display:'flex',flexDirection:'column',height:'calc(100vh - 80px)'}}>
+      <Hdr title={t.sup} sub="AI assistant · ZeroLoss"/>
+      <div ref={ref} style={{flex:1,overflowY:'auto',padding:'14px',display:'flex',flexDirection:'column',gap:9}}>
+        {msgs.map((m,i)=>(
+          <div key={i} className={`cb2 ${m.r==='b'?'ci':'co'}`} style={{animation:'su .22s ease both'}}>
+            {m.r==='b'&&<div style={{fontSize:9,color:'var(--gold)',fontWeight:700,marginBottom:3}}>ZEROLOSS AI</div>}
+            <div style={{color:'var(--w)',fontSize:13}}>{m.tx}</div>
+          </div>
+        ))}
+        {typ&&<div className="cb2 ci"><div style={{fontSize:9,color:'var(--gold)',fontWeight:700,marginBottom:3}}>ZEROLOSS AI</div><div style={{display:'flex',gap:4}}>{[0,1,2].map(i=><div key={i} style={{width:5,height:5,borderRadius:'50%',background:'var(--mu)',animation:`ps 1.2s ease ${i*.2}s infinite`}}/>)}</div></div>}
+        <div style={{marginTop:6}}>
+          <div style={{fontSize:10,color:'var(--mu)',marginBottom:7}}>Quick questions:</div>
+          {QA.map(([q],i)=><button key={i} className="bgh btn" style={{width:'100%',padding:'9px 13px',fontSize:12,justifyContent:'flex-start',marginBottom:6,textAlign:'left'}} onClick={()=>send(q)}>{q}</button>)}
+        </div>
+      </div>
+      <div style={{padding:'10px 14px',background:'var(--ink2)',borderTop:'1px solid var(--fa)',display:'flex',gap:7}}>
+        <input className="inp" placeholder={lang==='en'?'Ask anything…':lang==='hi'?'कुछ भी पूछें…':'ఏదైనా అడగండి…'} value={inp} onChange={e=>setInp(e.target.value)} onKeyDown={e=>e.key==='Enter'&&send()} style={{flex:1,borderRadius:10}}/>
+        <button className="bg btn" style={{padding:'11px 14px',borderRadius:10,flexShrink:0}} onClick={()=>send()}><i className="fa-solid fa-paper-plane" style={{fontSize:13}}/></button>
+      </div>
+    </div>
+  );
+};
+
+/* ADMIN */
+const AdminP=({go,lang,weather,claimStatus})=>{
+  const t=L[lang];
+  const [fr,setFr]=useState(0);
+  return(
+    <div className="pv on">
+      <div style={{background:'var(--ink2)',borderBottom:'1px solid var(--fa)',padding:'15px 20px',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+        <div style={{fontFamily:'var(--disp)',fontSize:20,fontWeight:800}}>{t.ac}</div>
+        <button className="bgh btn" style={{padding:'7px 11px',fontSize:11,borderRadius:8}} onClick={()=>go('dashboard')}><i className="fa-solid fa-arrow-left" style={{fontSize:11}}/> App</button>
+      </div>
+      <div style={{padding:'14px'}}>
+        <div className="sl">{t.ss}</div>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:9,marginBottom:14}}>
+          {[['847','Workers','var(--w)'],['₹54,208','Premium/week','var(--gold)'],[fr>=2?'500':'0',t.blk,'var(--rose)'],['₹2.17L',t.prt,'var(--lime)']].map(([v,l,c])=>(
+            <div key={l} style={{background:'var(--ink3)',border:'1px solid var(--fa)',borderRadius:12,padding:'13px'}}>
+              <div style={{fontFamily:'var(--disp)',fontSize:20,fontWeight:800,color:c}}>{v}</div>
+              <div style={{fontSize:10,color:'var(--mu)',marginTop:2,textTransform:'uppercase',letterSpacing:.5}}>{l}</div>
+            </div>
+          ))}
+        </div>
+        <div className="card" style={{padding:'13px 15px',marginBottom:13}}>
+          {[['Trigger Engine','30min cycle','lime'],['XGBoost','v2.1 loaded','lime'],['Isolation Forest','Active','lime'],['OpenWeatherMap','Connected','lime'],['OpenAQ','Connected','lime'],['Razorpay','Test mode','gold']].map(([k,v,c])=>(
+            <div key={k} style={{display:'flex',justifyContent:'space-between',padding:'7px 0',borderBottom:'1px solid var(--fa)',fontSize:12}}>
+              <span style={{color:'var(--mu)'}}>{k}</span><span style={{fontWeight:600,color:`var(--${c})`}}>{v}</span>
+            </div>
+          ))}
+        </div>
+        <div className="sl">{t.fd}</div>
+        {fr===0&&<button className="br btn" style={{width:'100%',padding:'14px',fontSize:13,marginBottom:12}} onClick={()=>{setFr(1);setTimeout(()=>setFr(2),1800);}}>
+          <i className="fa-solid fa-skull-crossbones"/>{t.mc}
+        </button>}
+        {fr===1&&<div style={{background:'var(--rd)',border:'1px solid var(--rb)',borderRadius:13,padding:'18px',textAlign:'center',animation:'fi .3s ease both'}}>
+          <i className="fa-solid fa-circle-notch sp" style={{fontSize:26,color:'var(--rose)',marginBottom:9,display:'block'}}/>
+          <div style={{fontWeight:700,color:'var(--rose)',fontSize:15}}>INCOMING ATTACK</div>
+          <div style={{fontSize:12,color:'var(--mu)',marginTop:3}}>500 GPS-spoofed claims detected…</div>
+        </div>}
+        {fr===2&&<div style={{animation:'fi .3s ease both'}}>
+          <div style={{background:'rgba(255,75,110,.1)',border:'2px solid var(--rose)',borderRadius:15,padding:'16px',marginBottom:11}}>
+            <div style={{display:'flex',alignItems:'center',gap:9,marginBottom:6}}>
+              <i className="fa-solid fa-triangle-exclamation tk" style={{fontSize:18,color:'var(--rose)'}}/>
+              <div style={{fontWeight:800,fontSize:14,color:'var(--rose)'}}>COORDINATED ATTACK DETECTED</div>
+            </div>
+            <div style={{fontSize:12,color:'var(--mu)',lineHeight:1.6}}>500 claims from <span style={{fontFamily:'monospace',color:'var(--rose)',fontSize:11}}>Bangalore_South</span> within 400ms. GPS static to 6dp. Coordinated bot farm attempting to drain liquidity pool.</div>
+          </div>
+          <div className="card" style={{padding:'14px',marginBottom:11}}>
+            {[['GPS Jitter Test','Static — no drift','FAILED'],['Velocity Check','15km in 2min','BLOCKED'],['6-Decimal Clustering','500 at same lat/lng','BOT FARM'],['Platform Check','Active delivery found','CONFLICT'],['IP Subnet','Same /24 block','FLAGGED']].map(([k,d,v])=>(
+              <div key={k} style={{padding:'8px 0',borderBottom:'1px solid var(--fa)'}}>
+                <div style={{display:'flex',justifyContent:'space-between',marginBottom:2}}>
+                  <span style={{fontSize:12,fontWeight:600}}>{k}</span>
+                  <span style={{fontSize:10,fontWeight:700,color:'var(--rose)',fontFamily:'monospace'}}>{v}</span>
+                </div>
+                <div style={{fontSize:10,color:'var(--mu)'}}>{d}</div>
+              </div>
+            ))}
+          </div>
+          <div className="card cl" style={{padding:'16px'}}>
+            <div style={{fontSize:10,color:'var(--mu)',marginBottom:8,textTransform:'uppercase',letterSpacing:.7}}>Isolation Forest Verdict</div>
+            <div style={{display:'flex',justifyContent:'space-between',marginBottom:11}}>
+              <div><div style={{fontSize:14,fontWeight:800,color:'var(--rose)'}}>500 BLOCKED</div><div style={{fontSize:10,color:'var(--mu)',marginTop:1}}>score &gt; 0.8</div></div>
+              <div style={{textAlign:'right'}}><div style={{fontSize:14,fontWeight:800,color:'var(--lime)'}}>847 PAID</div><div style={{fontSize:10,color:'var(--mu)',marginTop:1}}>score &lt; 0.3</div></div>
+            </div>
+            <div style={{background:'var(--ink)',borderRadius:9,padding:'11px 13px',fontSize:12,color:'var(--mu)',lineHeight:1.65}}>
+              <strong style={{color:'var(--lime)'}}>Arjun</strong> — GPS drift ±3m natural, velocity plausible, 60-day clean history. Score: <strong style={{color:'var(--lime)'}}>0.08</strong>. Paid ₹800 in 8 seconds. Never felt the friction.
+            </div>
+          </div>
+        </div>}
+        <div className="sl" style={{marginTop:18}}>City Risk Overview</div>
+        <div className="card" style={{overflow:'hidden',padding:0}}>
+          {[['Mumbai','High','₹118/wk','234'],['Bangalore','Med-High','₹64/wk','312'],['Delhi','High','₹89/wk','178'],['Hyderabad','Med','₹52/wk','123']].map(([ci,ri,pr,wo],i,a)=>(
+            <div key={ci} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'12px 15px',borderBottom:i<a.length-1?'1px solid var(--fa)':'none'}}>
+              <div><div style={{fontSize:13,fontWeight:600}}>{ci}</div><div style={{fontSize:10,color:'var(--mu)',marginTop:1}}>{wo} workers · {pr}</div></div>
+              <span className={`tag ${ri==='High'?'tr':ri==='Med-High'?'tg':'tc'}`}>{ri}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* ROOT */
+function App(){
+  const [pg,setPg]=useState('landing');
+  const [lang,setLang]=useState('en');
+  const [wx,setWx]=useState({rain:12,aqi:110});
+  const [cs,setCs]=useState(null);
+  const go=p=>{setPg(null);setTimeout(()=>setPg(p),40);};
+  const sim=()=>{setWx({rain:68,aqi:187});setCs('checking');setTimeout(()=>setCs('approved'),3000);};
+  const nav=[
+    {id:'dashboard',ic:'fa-house',lb:(l)=>L[l].home},
+    {id:'weather',ic:'fa-cloud-bolt',lb:(l)=>L[l].wx},
+    {id:'payouts',ic:'fa-wallet',lb:(l)=>L[l].pay},
+    {id:'alerts',ic:'fa-bell',lb:(l)=>L[l].alrt,dot:true},
+    {id:'support',ic:'fa-headset',lb:(l)=>L[l].supp},
+  ];
+  const showNav=!['landing','register'].includes(pg);
+  return(
+    <div style={{height:'100%',display:'flex',flexDirection:'column',maxWidth:430,margin:'0 auto',background:'var(--ink)'}}>
+      <div className="sa" style={{paddingBottom:showNav?80:0}}>
+        {pg==='landing'&&<Landing go={go} lang={lang} setLang={setLang}/>}
+        {pg==='register'&&<Register go={go} lang={lang}/>}
+        {pg==='dashboard'&&<DashPage go={go} lang={lang} weather={wx} claimStatus={cs} onSim={sim}/>}
+        {pg==='weather'&&<WxPage lang={lang} weather={wx}/>}
+        {pg==='payouts'&&<PayPage lang={lang}/>}
+        {pg==='alerts'&&<AlertsP lang={lang}/>}
+        {pg==='support'&&<SuppPage lang={lang}/>}
+        {pg==='admin'&&<AdminP go={go} lang={lang} weather={wx} claimStatus={cs}/>}
+      </div>
+      {showNav&&(
+        <div className="nb">
+          {nav.map(n=>(
+            <div key={n.id} className={`ni ${pg===n.id?'a':''}`} onClick={()=>go(n.id)}>
+              <div style={{position:'relative'}}>
+                <i className={`fa-solid ${n.ic}`}/>
+                {n.dot&&<div className="nd"/>}
+              </div>
+              <span className="nl">{n.lb(lang)}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>

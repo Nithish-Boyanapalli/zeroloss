@@ -169,7 +169,7 @@ export default function WorkerDashboard() {
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="bg-white p-5 rounded-[1.5rem] border border-slate-200 shadow-sm border-t-4 border-t-blue-600 hover:shadow-md transition-shadow">
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Premium</p>
-                <h2 className="text-2xl font-black text-slate-900">₹{parseFloat(active_policy?.weekly_premium || 0).toFixed(0)}</h2>
+                <h2 className="text-2xl font-black text-slate-900">₹{parseFloat(active_policy?.weekly_premium || 0).toFixed(2)}</h2>
                 <p className="text-[9px] font-bold text-slate-400 mt-1 uppercase">Weekly Bill</p>
               </div>
               
@@ -284,7 +284,7 @@ export default function WorkerDashboard() {
       </main>
 
       {/* ── MOBILE ONLY: Floating Action Button ── */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 p-5 bg-gradient-to-t from-white via-white/95 to-transparent z-50">
+      <div className="lg:hidden fixed bottom-16 left-0 right-0 p-5 bg-gradient-to-t from-white via-white/95 to-transparent z-50">
         <button 
           className="w-full h-16 bg-blue-600 hover:bg-blue-700 text-white font-black text-lg rounded-2xl shadow-[0_8px_30px_rgb(37,99,235,0.3)] transition-transform active:scale-95 disabled:opacity-50 flex items-center justify-center gap-3" 
           onClick={triggerScan} 

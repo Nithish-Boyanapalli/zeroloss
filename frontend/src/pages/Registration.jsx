@@ -21,6 +21,14 @@ export default function Registration() {
     avg_daily_orders: 15, avg_weekly_income: 3500, upi_id: '',
   })
 
+  // State to lock the quote exact values
+  const [lockedQuote, setLockedQuote] = useState({
+    premium: 0,
+    benefit: 0,
+    riskLevel: '',
+    riskScore: 0
+  })
+
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
 
   const calcPreview = async () => {
@@ -31,7 +39,18 @@ export default function Registration() {
         weekly_hours: form.weekly_hours,
         avg_weekly_income: form.avg_weekly_income,
       })
-      setPreview(r.data); setStep(2)
+      
+      setPreview(r.data);
+      
+      // LOCK THE EXACT DATA HERE so it doesn't recalculate later
+      setLockedQuote({
+        premium: r.data.weekly_premium,
+        benefit: r.data.coverage_amount,
+        riskLevel: r.data.risk_level,
+        riskScore: r.data.risk_score
+      });
+      
+      setStep(2)
     } catch { setError('Network Error: Could not reach the calculation engine.') }
     finally { setLoading(false) }
   }
@@ -39,14 +58,27 @@ export default function Registration() {
   const submit = async () => {
     setLoading(true); setError('')
     try {
+      // 1. Register the Worker
       const wr = await workersAPI.register({
         ...form,
         weekly_hours: parseInt(form.weekly_hours),
         avg_daily_orders: parseInt(form.avg_daily_orders),
         avg_weekly_income: parseFloat(form.avg_weekly_income),
       })
-      const pr = await policiesAPI.create({ worker_id: wr.data.id, auto_renew: true })
-      setWorker(wr.data); setPolicy(pr.data); setStep(3)
+      
+      // 2. Create the Policy using the LOCKED QUOTE
+      const pr = await policiesAPI.create({ 
+        worker_id: wr.data.id, 
+        auto_renew: true,
+        weekly_premium: lockedQuote.premium,
+        coverage_amount: lockedQuote.benefit,
+        risk_level: lockedQuote.riskLevel,
+        risk_score: lockedQuote.riskScore
+      })
+      
+      setWorker(wr.data); 
+      setPolicy(pr.data); 
+      setStep(3)
     } catch (e) {
       setError(e.response?.data?.detail || 'Registration failed. Check your details.')
     } finally { setLoading(false) }

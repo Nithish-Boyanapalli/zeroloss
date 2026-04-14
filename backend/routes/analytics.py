@@ -1,70 +1,74 @@
 """
-routes/analytics.py
---------------------
-New API routes for Phase 3 analytics features.
-Add these to your main.py with: app.include_router(analytics_router)
+routes/analytics.py  —  ZeroLoss Phase 3
+Place at: backend/routes/analytics.py
 """
 
-from fastapi import APIRouter, Query, HTTPException
-from services.predictive_analytics import generate_weekly_forecast, compute_loss_ratio
-from services.business_model import get_business_model_summary, get_unit_economics_for_worker
-from services.zones import (
-    get_zone_by_pincode, get_all_zones_for_city,
-    get_high_risk_zones, get_flood_prone_zones,
-    get_zone_stats_summary, list_all_pincodes
+from fastapi import APIRouter, Query, HTTPException, Depends
+from sqlalchemy.orm import Session
+from datetime import datetime, date
+
+from backend.database import get_db
+from backend.services.predictive_analytics import generate_weekly_forecast, compute_loss_ratio, get_cached_forecast
+from backend.services.business_model import get_full_business_model, get_worker_unit_economics
+from backend.services.zones import (
+    get_zone, zones_for_city, high_risk_zones,
+    flood_prone_zones, zone_summary, get_multiplier,
 )
-from services.scheduler import get_scheduler_status
+from backend.services.scheduler import get_scheduler_status
 
-analytics_router = APIRouter(prefix="/analytics", tags=["Analytics"])
+router = APIRouter()
 
 
-# ─────────────────────────────────────────────
-# PREDICTIVE ANALYTICS
-# ─────────────────────────────────────────────
+@router.get("/scheduler/status")
+def scheduler_status():
+    return {"success": True, "data": get_scheduler_status()}
 
-@analytics_router.get("/forecast")
-async def get_disruption_forecast(
-    city: str = Query(default="Hyderabad", description="City name"),
-    active_policies: int = Query(default=0, description="Override active policy count"),
+
+@router.get("/forecast")
+async def get_forecast(
+    city: str = Query(default="Hyderabad"),
+    use_cache: bool = Query(default=True),
 ):
-    """
-    Returns 7-day disruption forecast with expected claims and payouts.
-    Used by Admin Dashboard → Predictive Analytics panel.
-    """
+    if use_cache:
+        cached = get_cached_forecast(city)
+        if cached:
+            cached["from_cache"] = True
+            return {"success": True, "data": cached}
     try:
-        result = await generate_weekly_forecast(city=city, active_policies=active_policies)
+        result = await generate_weekly_forecast(city=city)
         return {"success": True, "data": result}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@analytics_router.get("/forecast/all-cities")
-async def get_forecast_all_cities():
-    """Returns forecast summary for all major cities."""
-    cities = ["Hyderabad", "Vijayawada", "Mumbai", "Bangalore", "Delhi"]
+@router.get("/forecast/all-cities")
+async def forecast_all_cities():
+    cities = ["Hyderabad", "Vijayawada", "Mumbai", "Bangalore", "Delhi", "Chennai"]
     results = []
     for city in cities:
         try:
-            forecast = await generate_weekly_forecast(city=city)
-            summary = forecast["weekly_summary"]
-            summary["city"] = city
-            summary["alert_level"] = "HIGH" if summary["high_risk_days"] >= 3 else "LOW"
-            results.append(summary)
+            data = await generate_weekly_forecast(city=city)
+            results.append({
+                "city": city,
+                "high_risk_days": data["weekly_summary"]["high_risk_days"],
+                "worst_day": data["weekly_summary"]["worst_day"],
+                "worst_day_probability": data["weekly_summary"]["worst_day_probability"],
+                "total_expected_claims": data["weekly_summary"]["total_expected_claims"],
+                "total_expected_payout_inr": data["weekly_summary"]["total_expected_payout_inr"],
+                "recommendation": data["recommendation"],
+                "alert_level": (
+                    "HIGH"   if data["weekly_summary"]["high_risk_days"] >= 3 else
+                    "MEDIUM" if data["weekly_summary"]["high_risk_days"] >= 1 else
+                    "LOW"
+                ),
+            })
         except Exception as e:
             results.append({"city": city, "error": str(e)})
-    return {"success": True, "cities": results}
+    return {"success": True, "cities": results, "count": len(results)}
 
 
-# ─────────────────────────────────────────────
-# LOSS RATIO & FINANCIAL METRICS
-# ─────────────────────────────────────────────
-
-@analytics_router.get("/loss-ratio")
+@router.get("/loss-ratio")
 async def get_loss_ratio():
-    """
-    Returns loss ratio and financial health metrics.
-    Used by Admin Dashboard → Financial Analytics panel.
-    """
     try:
         result = await compute_loss_ratio()
         return {"success": True, "data": result}
@@ -72,108 +76,164 @@ async def get_loss_ratio():
         raise HTTPException(status_code=500, detail=str(e))
 
 
-# ─────────────────────────────────────────────
-# ZONE ANALYTICS
-# ─────────────────────────────────────────────
-
-@analytics_router.get("/zones/pincode/{pincode}")
-async def get_zone_info(pincode: str):
-    """Returns risk information for a specific pin code."""
-    zone = get_zone_by_pincode(pincode)
-    return {"success": True, "data": zone}
+@router.get("/zones/summary")
+def zones_summary_route():
+    return {"success": True, "data": zone_summary()}
 
 
-@analytics_router.get("/zones/city/{city}")
-async def get_city_zones(city: str):
-    """Returns all zones for a city."""
-    zones = get_all_zones_for_city(city)
+@router.get("/zones/pincode/{pincode}")
+def zone_by_pincode(pincode: str):
+    return {"success": True, "data": get_zone(pincode)}
+
+
+@router.get("/zones/city/{city}")
+def zones_by_city(city: str):
+    zones = zones_for_city(city)
     if not zones:
-        raise HTTPException(status_code=404, detail=f"No zones found for city: {city}")
-    return {"success": True, "city": city, "zone_count": len(zones), "data": zones}
+        raise HTTPException(status_code=404, detail=f"No zones found for: {city}")
+    return {"success": True, "city": city, "count": len(zones), "data": zones}
 
 
-@analytics_router.get("/zones/high-risk")
-async def get_high_risk():
-    """Returns all high and critical risk zones."""
-    zones = get_high_risk_zones()
+@router.get("/zones/high-risk")
+def high_risk_route():
+    zones = high_risk_zones()
     return {"success": True, "count": len(zones), "data": zones}
 
 
-@analytics_router.get("/zones/flood-prone")
-async def get_flood_zones():
-    """Returns all flood-prone zones."""
-    zones = get_flood_prone_zones()
+@router.get("/zones/flood-prone")
+def flood_zones_route():
+    zones = flood_prone_zones()
     return {"success": True, "count": len(zones), "data": zones}
 
 
-@analytics_router.get("/zones/summary")
-async def get_zones_summary():
-    """Returns summary stats for all zones."""
-    return {"success": True, "data": get_zone_stats_summary()}
+@router.get("/zones/multiplier/{pincode}")
+def zone_multiplier(pincode: str):
+    return {"pincode": pincode, "premium_multiplier": get_multiplier(pincode)}
 
 
-@analytics_router.get("/zones/all-pincodes")
-async def get_all_pincodes():
-    """Returns list of all known pincodes."""
-    return {"success": True, "pincodes": list_all_pincodes()}
+@router.get("/business-model")
+def business_model():
+    return {"success": True, "data": get_full_business_model()}
 
 
-# ─────────────────────────────────────────────
-# BUSINESS MODEL
-# ─────────────────────────────────────────────
-
-@analytics_router.get("/business-model")
-async def get_business_model():
-    """
-    Returns complete business model data.
-    Used by Business Model page on frontend.
-    Judge feedback: explicit business model documentation.
-    """
-    return {"success": True, "data": get_business_model_summary()}
-
-
-@analytics_router.get("/business-model/unit-economics")
-async def get_unit_economics(
-    weekly_premium: float = Query(default=233, description="Worker's weekly premium"),
-    risk_score: float = Query(default=0.5, description="AI risk score 0-1"),
-    zone_multiplier: float = Query(default=1.0, description="Zone premium multiplier"),
+@router.get("/business-model/unit-economics")
+def unit_economics(
+    weekly_premium: float = Query(default=233),
+    risk_score: float = Query(default=0.5),
 ):
-    """Returns unit economics for a specific worker premium."""
-    result = get_unit_economics_for_worker(weekly_premium, risk_score, zone_multiplier)
-    return {"success": True, "data": result}
+    return {"success": True, "data": get_worker_unit_economics(weekly_premium, risk_score)}
 
 
-# ─────────────────────────────────────────────
-# SCHEDULER STATUS
-# ─────────────────────────────────────────────
+@router.post("/fraud/analyze")
+async def analyze_fraud(payload: dict):
+    import math
 
-@analytics_router.get("/scheduler/status")
-async def get_scheduler_status_api():
-    """
-    Returns current status of all background scheduler jobs.
-    Shows admin that automation is running.
-    """
-    status = get_scheduler_status()
-    return {"success": True, "data": status}
+    def haversine(lat1, lon1, lat2, lon2):
+        R = 6371
+        dlat = math.radians(lat2 - lat1)
+        dlon = math.radians(lon2 - lon1)
+        a = (math.sin(dlat / 2) ** 2 +
+             math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) *
+             math.sin(dlon / 2) ** 2)
+        return R * 2 * math.asin(math.sqrt(a))
 
+    signals = []
+    score = 0.0
+    max_speed = 0.0
 
-# ─────────────────────────────────────────────
-# FRAUD ANALYTICS
-# ─────────────────────────────────────────────
+    location_history = payload.get("location_history", [])
+    if len(location_history) >= 2:
+        from datetime import datetime as dt
+        for i in range(1, len(location_history)):
+            prev, curr = location_history[i - 1], location_history[i]
+            try:
+                dist = haversine(prev["lat"], prev["lon"], curr["lat"], curr["lon"])
+                t1 = dt.fromisoformat(prev["timestamp"])
+                t2 = dt.fromisoformat(curr["timestamp"])
+                hrs = max((t2 - t1).total_seconds() / 3600, 0.0001)
+                spd = dist / hrs
+                max_speed = max(max_speed, spd)
+                if spd > 200:
+                    signals.append(f"GPS SPOOFING: Speed {spd:.0f} km/h detected")
+                    score += 0.35
+            except Exception:
+                pass
 
-@analytics_router.post("/fraud/analyze")
-async def analyze_single_claim(claim_data: dict):
-    """
-    Runs full fraud analysis on a single claim.
-    Useful for manual review from admin dashboard.
-    """
-    from services.fraud_detection import analyze_claim_fraud
+    wlat = payload.get("worker_lat")
+    wlon = payload.get("worker_lon")
+    dlat = payload.get("disruption_lat")
+    dlon = payload.get("disruption_lon")
+    if all(v is not None for v in [wlat, wlon, dlat, dlon]):
+        dist = haversine(float(wlat), float(wlon), float(dlat), float(dlon))
+        if dist > 25:
+            signals.append(f"LOCATION MISMATCH: Worker is {dist:.1f}km from disruption zone")
+            score += 0.15
+
     try:
-        result = await analyze_claim_fraud(
-            claim=claim_data,
-            location_history=claim_data.pop("location_history", None),
-            existing_claims=claim_data.pop("existing_claims", None),
-        )
-        return {"success": True, "data": result}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        from backend.database import SessionLocal
+        from backend.services.fraud_service import calculate_fraud_score
+        db = SessionLocal()
+        policy_id = payload.get("policy_id", "")
+        disruption_id = payload.get("disruption_id", "")
+        claim_amount = float(payload.get("claim_amount", 0))
+        if policy_id and disruption_id:
+            result = calculate_fraud_score(db, policy_id, disruption_id, claim_amount)
+            score = min(score + result["fraud_score"] * 0.5, 1.0)
+            if result["fraud_reason"]:
+                signals.append(f"RULE ENGINE: {result['fraud_reason']}")
+        db.close()
+    except Exception:
+        pass
+
+    final_score = round(min(score, 1.0), 3)
+    return {
+        "success": True,
+        "data": {
+            "fraud_score": final_score,
+            "is_fraud": final_score >= 0.4,
+            "fraud_signals": signals,
+            "max_speed_kmh": round(max_speed, 1),
+            "recommended_action": (
+                "REJECT"          if final_score >= 0.7 else
+                "FLAG_HIGH_RISK"  if final_score >= 0.4 else
+                "FLAG_FOR_REVIEW" if final_score >= 0.2 else
+                "APPROVE"
+            ),
+        }
+    }
+
+
+@router.get("/admin-overview")
+async def admin_overview(db: Session = Depends(get_db)):
+    from backend.models import Worker, Policy, Claim, Payout, ClaimStatusEnum
+
+    today_start = datetime.combine(date.today(), datetime.min.time())
+    total_workers   = db.query(Worker).filter(Worker.is_active == True).count()
+    active_policies = db.query(Policy).filter(Policy.status == "active").count()
+    claims_today    = db.query(Claim).filter(Claim.triggered_at >= today_start).count()
+    fraud_review    = db.query(Claim).filter(Claim.status == ClaimStatusEnum.fraud_review).count()
+    payouts_today   = sum(
+        float(p.amount)
+        for p in db.query(Payout).filter(Payout.initiated_at >= today_start).all()
+    )
+    loss_ratio_data = await compute_loss_ratio()
+    forecast = get_cached_forecast("Hyderabad")
+    if not forecast:
+        forecast = await generate_weekly_forecast("Hyderabad", active_policies)
+
+    return {
+        "success": True,
+        "data": {
+            "metrics": {
+                "total_workers":        total_workers,
+                "active_policies":      active_policies,
+                "claims_today":         claims_today,
+                "fraud_review_pending": fraud_review,
+                "payouts_today_inr":    round(payouts_today, 2),
+            },
+            "financial":        loss_ratio_data,
+            "scheduler":        get_scheduler_status(),
+            "zones":            zone_summary(),
+            "forecast_summary": forecast.get("weekly_summary") if forecast else {},
+        }
+    }

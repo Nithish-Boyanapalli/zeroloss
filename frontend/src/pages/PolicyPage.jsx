@@ -1,7 +1,13 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Shield, ArrowLeft, Download, Calendar, CheckCircle2, RefreshCw } from 'lucide-react'
+import { Shield, ArrowLeft, Download, Calendar, CheckCircle2, RefreshCw, Zap } from 'lucide-react'
 import { policiesAPI } from '../services/api'
+
+// Explicit Tailwind mapping for purge safety
+const getBadgeStyles = (status) => {
+  if (status === 'active') return 'bg-emerald-100 text-emerald-700 border-emerald-200'
+  return 'bg-slate-100 text-slate-600 border-slate-200'
+}
 
 export default function PolicyPage() {
   const { id } = useParams()
@@ -15,8 +21,13 @@ export default function PolicyPage() {
   }, [id, nav])
 
   if (!policy) return (
-    <div className="flex items-center justify-center min-vh-100 bg-slate-50">
-      <div className="shimmer w-48 h-6 rounded" />
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="flex flex-col items-center gap-3 animate-pulse">
+        <div className="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center">
+          <Shield size={32} className="text-blue-300" />
+        </div>
+        <div className="h-4 w-32 bg-slate-200 rounded-full"></div>
+      </div>
     </div>
   )
 
@@ -32,78 +43,84 @@ export default function PolicyPage() {
   ]
 
   return (
-    <div className="min-vh-100 bg-slate-50 pb-10">
-      {/* Header Area */}
-      <div className="max-w-[480px] mx-auto p-6">
+    <div className="min-h-screen bg-slate-50 py-12 px-4 font-sans text-slate-900">
+      
+      <div className="max-w-md mx-auto">
         <button 
           onClick={() => nav(-1)} 
-          className="flex items-center gap-2 text-slate-500 font-bold text-xs uppercase tracking-widest mb-8"
+          className="flex items-center gap-2 text-slate-500 hover:text-slate-800 transition-colors font-bold text-xs uppercase tracking-widest mb-8"
         >
           <ArrowLeft size={16} /> Back to Dashboard
         </button>
 
-        <div className="bg-white rounded-[32px] border border-slate-100 shadow-xl overflow-hidden">
-          {/* Top Visual Banner */}
-          <div className="bg-blue-600 p-8 text-center text-white relative">
-             <div className="absolute top-4 right-4 opacity-20">
-                <Shield size={60} />
+        {/* ── The Digital Certificate Card ── */}
+        <div className="bg-white rounded-[2rem] border border-slate-200 shadow-xl shadow-slate-200/50 overflow-hidden">
+          
+          {/* Top Banner */}
+          <div className="bg-blue-600 p-10 text-center text-white relative overflow-hidden">
+             {/* Decorative Background Elements */}
+             <div className="absolute -top-10 -right-10 w-40 h-40 bg-blue-500 rounded-full blur-2xl opacity-50"></div>
+             <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-indigo-500 rounded-full blur-2xl opacity-50"></div>
+             <Shield size={120} className="absolute -right-4 top-4 text-blue-500/20 rotate-12" />
+             
+             <div className="relative z-10">
+               <div className="bg-white/20 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 backdrop-blur-md shadow-lg border border-white/20">
+                  <CheckCircle2 size={32} className="text-white" />
+               </div>
+               <h1 className="text-2xl font-black tracking-tight mb-1">ZeroLoss Policy</h1>
+               <p className="text-blue-200 text-[10px] font-black uppercase tracking-[0.2em]">Certificate ID: #LSS-{id.slice(0, 8).toUpperCase()}</p>
              </div>
-             <div className="bg-white/20 w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4 backdrop-blur-md">
-                <CheckCircle2 size={28} className="text-white" />
-             </div>
-             <h1 className="text-xl font-black tracking-tight">Policy Certificate</h1>
-             <p className="text-blue-100 text-[10px] font-bold uppercase tracking-widest mt-1">ID: #LSS-{id.slice(0, 8).toUpperCase()}</p>
           </div>
 
-          {/* Details List */}
-          <div className="p-6 space-y-1">
-            {details.map((item, index) => (
-              <div 
-                key={item.label} 
-                className={`flex justify-between items-center py-4 ${index !== details.length - 1 ? 'border-b border-slate-50' : ''}`}
-              >
-                <div className="flex items-center gap-3">
-                  {item.icon && <item.icon size={16} className="text-slate-300" />}
-                  <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{item.label}</span>
+          {/* Policy Data Rows */}
+          <div className="p-6 sm:p-8">
+            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-3 mb-2">Coverage Details</h3>
+            
+            <div className="space-y-1">
+              {details.map((item) => (
+                <div key={item.label} className="flex justify-between items-center py-3 border-b border-slate-50 last:border-0">
+                  <div className="flex items-center gap-3">
+                    {item.icon ? <item.icon size={16} className="text-blue-500" /> : <div className="w-4" />}
+                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">{item.label}</span>
+                  </div>
+                  
+                  {item.type === 'badge' ? (
+                    <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest border ${getBadgeStyles(policy.status)}`}>
+                      {item.value}
+                    </span>
+                  ) : (
+                    <span className={`text-sm font-black text-slate-900 ${item.label === 'Max Benefit' ? 'text-lg text-emerald-600' : ''} ${item.label.includes('Risk') ? 'text-amber-500' : ''}`}>
+                      {item.value}
+                    </span>
+                  )}
                 </div>
-                
-                {item.type === 'badge' ? (
-                  <span className={`badge ${policy.status === 'active' ? 'badge-green' : 'badge-gray'}`}>
-                    {item.value.toUpperCase()}
-                  </span>
-                ) : (
-                  <span className={`text-sm font-black text-slate-900 ${item.label === 'Max Benefit' ? 'currency' : ''} ${item.label.includes('Risk') ? 'text-blue-600' : ''}`}>
-                    {item.value}
-                  </span>
-                )}
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
 
-          {/* Footer Action */}
-          <div className="p-6 bg-slate-50 border-t border-slate-100">
-             <button className="btn-secondary flex items-center justify-center gap-2 py-4">
+          {/* Action Footer */}
+          <div className="p-6 bg-slate-50 border-t border-slate-100 flex flex-col gap-4">
+             <button className="w-full h-14 bg-white text-slate-700 font-black text-sm rounded-xl border-2 border-slate-200 hover:bg-slate-100 hover:border-slate-300 transition-all flex items-center justify-center gap-3 shadow-sm active:scale-95">
                 <Download size={18} />
                 Download PDF Receipt
              </button>
-             <p className="text-center text-[10px] text-slate-400 font-bold uppercase mt-4 tracking-tighter">
-                Verified by Guidewire DEVTrails Node 2026
+             <p className="text-center text-[9px] text-slate-400 font-black uppercase tracking-[0.2em] flex justify-center items-center gap-1.5 opacity-60">
+                <Shield size={10} /> Verified by ZeroLoss Network
              </p>
           </div>
         </div>
 
-        {/* Small Print for the Indian Context */}
-        <div className="mt-8 px-4">
-           <div className="flex gap-3 items-start opacity-60">
-              <Shield size={14} className="text-slate-400 shrink-0 mt-0.5" />
-              <p className="text-[10px] text-slate-500 leading-relaxed font-medium">
-                This policy covers income loss caused by weather events exceeding the 85th percentile, 
-                AQI thresholds above 350, and local government-mandated disruptions. 
-                Payouts are handled via NPCI/UPI gateways instantly.
+        {/* ── Legal & Context Disclosures ── */}
+        <div className="mt-8 px-2">
+           <div className="bg-blue-50/50 border border-blue-100 p-5 rounded-2xl flex gap-3 items-start">
+              <Zap size={18} className="text-blue-500 shrink-0 mt-0.5" />
+              <p className="text-[11px] text-blue-900/80 leading-relaxed font-medium">
+                This parametric policy guarantees income protection against hyper-local weather events exceeding the 85th percentile, AQI thresholds above 350, and authorized city disruptions. All settlements are validated by our AI engine and executed instantly via NPCI/UPI gateways.
               </p>
            </div>
         </div>
       </div>
+
     </div>
   )
 }

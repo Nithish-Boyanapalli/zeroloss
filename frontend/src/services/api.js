@@ -41,3 +41,15 @@ export const adminAPI = {
   dashboard:   () => API.get('/admin/dashboard'),
   fraudAlerts: () => API.get('/admin/fraud-alerts'),
 }
+
+// Phase 3 Analytics & Business API
+export const analyticsAPI = {
+  schedulerStatus:   () => API.get('/analytics/scheduler/status'),
+  forecast:          () => API.get('/analytics/forecast'),
+  forecastAllCities: () => API.get('/analytics/forecast/all-cities'),
+  lossRatio:         () => API.get('/analytics/loss-ratio'),
+  zonesSummary:      () => API.get('/analytics/zones/summary'),
+  businessModel:     () => API.get('/analytics/business-model'),
+  unitEconomics:     () => API.get('/analytics/business-model/unit-economics'),
+  adminOverview:     () => API.get('/analytics/admin-overview')
+}

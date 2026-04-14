@@ -1,14 +1,24 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Shield, Zap, TrendingUp, Clock, AlertTriangle, CheckCircle, IndianRupee, MapPin, Smartphone } from 'lucide-react'
+import { Shield, Zap, Clock, CheckCircle, IndianRupee, MapPin, Smartphone, Activity } from 'lucide-react'
 import { workersAPI, disruptionsAPI } from '../services/api'
 
+// Tailwind-safe color mapping (prevents CSS purging issues)
 const StatusBadge = ({ s }) => {
   const map = {
-    paid: 'green', approved: 'green', auto_triggered: 'blue',
-    fraud_review: 'yellow', rejected: 'red',
+    paid: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+    approved: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+    auto_triggered: 'bg-blue-100 text-blue-800 border-blue-200',
+    fraud_review: 'bg-orange-100 text-orange-800 border-orange-200',
+    rejected: 'bg-red-100 text-red-800 border-red-200',
   }
-  return <span className={`badge badge-${map[s] || 'gray'}`}>{s.replace(/_/g, ' ')}</span>
+  const colorClass = map[s] || 'bg-slate-100 text-slate-800 border-slate-200'
+  
+  return (
+    <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest border ${colorClass}`}>
+      {s.replace(/_/g, ' ')}
+    </span>
+  )
 }
 
 export default function WorkerDashboard() {
@@ -39,8 +49,11 @@ export default function WorkerDashboard() {
   }
 
   if (loading) return (
-    <div className="flex items-center justify-center min-vh-100 bg-slate-50">
-      <div className="shimmer w-64 h-8 rounded-lg" />
+    <div className="flex items-center justify-center min-h-screen bg-slate-50">
+      <div className="flex flex-col items-center gap-4 animate-pulse">
+        <div className="w-16 h-16 bg-blue-200 rounded-2xl"></div>
+        <div className="h-4 w-32 bg-slate-200 rounded-full"></div>
+      </div>
     </div>
   )
 
@@ -49,187 +62,242 @@ export default function WorkerDashboard() {
   const { worker, active_policy, total_claims, total_paid_out, recent_claims } = data
 
   return (
-    <div className="pb-28">
-      {/* Top Header - Indian Branding */}
-      <header className="p-5 bg-white border-b border-slate-100 flex justify-between items-center sticky top-0 z-10 backdrop-blur-md bg-white/90">
-        <div className="flex items-center gap-2">
-          <div className="bg-blue-600 p-1.5 rounded-lg">
-            <Shield size={20} className="text-white" />
-          </div>
-          <div>
-            <h2 className="font-extrabold text-slate-800 leading-tight">ZeroLoss</h2>
-            <p className="text-[10px] font-bold text-blue-600 uppercase tracking-tighter">Partner Safety</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2 bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-100">
-          <div className="pulse-dot bg-emerald-500" />
-          <span className="text-xs font-bold text-emerald-700">Policy Active</span>
-        </div>
-      </header>
-
-      <main className="p-4 space-y-5">
-        {/* Profile Card */}
-        <div className="flex justify-between items-start pt-2">
-          <div>
-            <h1 className="text-2xl font-black text-slate-900 tracking-tight">Namaste, {worker.name}</h1>
-            <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1">
-              <span className="flex items-center gap-1 text-xs font-bold text-slate-500">
-                <Smartphone size={12} /> {worker.platform.toUpperCase()}
-              </span>
-              <span className="flex items-center gap-1 text-xs font-bold text-slate-500">
-                <MapPin size={12} /> {worker.city.charAt(0).toUpperCase() + worker.city.slice(1)}
-              </span>
-              <span className="flex items-center gap-1 text-xs font-bold text-slate-500">
-                <Clock size={12} /> {worker.weekly_hours} hrs/wk
-              </span>
+    <div className="min-h-screen bg-slate-50 font-sans text-slate-900 pb-24 lg:pb-8">
+      
+      {/* ── Top Navigation ── */}
+      <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-200 px-6 py-4 w-full">
+        <div className="max-w-7xl mx-auto flex justify-between items-center">
+          <div className="flex items-center gap-3 cursor-pointer" onClick={() => nav('/')}>
+            <div className="bg-blue-600 p-2 rounded-xl shadow-sm">
+              <Shield size={20} className="text-white" />
+            </div>
+            <div>
+              <h2 className="font-black text-slate-900 leading-tight text-xl">ZeroLoss</h2>
+              <p className="text-[9px] font-bold text-blue-600 uppercase tracking-widest">Partner Dashboard</p>
             </div>
           </div>
+          <div className="flex items-center gap-2 bg-emerald-50 px-4 py-2 rounded-full border border-emerald-100 shadow-sm">
+            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-[11px] font-black tracking-widest uppercase text-emerald-700">Protected</span>
+          </div>
         </div>
+      </nav>
 
-        {/* Scan Result Notification - Indian Context */}
-        {scanResult && !scanResult.error && (
-          <div className={`p-4 rounded-2xl border-2 animate-in fade-in slide-in-from-top-4 duration-300 ${scanResult.claims_created > 0 ? 'bg-emerald-50 border-emerald-100' : 'bg-blue-50 border-blue-100'}`}>
-            <div className="flex gap-3">
-              {scanResult.claims_created > 0 ? <CheckCircle className="text-emerald-600 shrink-0" /> : <Zap className="text-blue-600 shrink-0" />}
-              <div>
-                <p className={`text-sm font-bold ${scanResult.claims_created > 0 ? 'text-emerald-900' : 'text-blue-900'}`}>
-                  {scanResult.claims_created > 0 
-                    ? `Disruption Detected: ${scanResult.events?.join(', ')}` 
-                    : `Weather is clear in ${scanResult.city}`}
-                </p>
-                <p className="text-xs mt-1 text-slate-600 font-medium">
-                  {scanResult.claims_created > 0 
-                    ? `Auto-payout initiated to your UPI ID: ${worker.upi_id}`
-                    : `No disruptions found. Your earnings are safe.`}
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Bento Grid Stats */}
-        <div className="bento-grid !p-0">
-          <div className="bento-item border-l-4 border-l-blue-600">
-            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Premium</p>
-            <h2 className="text-xl font-black text-slate-900 mt-1">₹{parseFloat(active_policy?.weekly_premium || 0).toFixed(2)}</h2>
-            <p className="text-[9px] font-bold text-slate-400 mt-0.5">WEEKLY BILL</p>
-          </div>
-          <div className="bento-item border-l-4 border-l-emerald-600">
-            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Coverage</p>
-            <h2 className="text-xl font-black text-slate-900 mt-1">₹{parseFloat(active_policy?.coverage_amount || 0).toLocaleString('en-IN')}</h2>
-            <p className="text-[9px] font-bold text-emerald-600 mt-0.5">MAX LIMIT</p>
-          </div>
-          <div className="bento-item">
-            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Claims</p>
-            <h2 className="text-xl font-black text-slate-900 mt-1">{total_claims}</h2>
-            <p className="text-[9px] font-bold text-slate-400 mt-0.5">SUBMITTED</p>
-          </div>
-          <div className="bento-item bg-indigo-600 border-none">
-            <p className="text-[10px] font-bold text-indigo-100 uppercase tracking-widest">Total Payout</p>
-            <h2 className="text-xl font-black text-white mt-1">₹{total_paid_out.toLocaleString('en-IN')}</h2>
-            <p className="text-[9px] font-bold text-indigo-200 mt-0.5 tracking-tighter">TRANSFERRED</p>
+      {/* ── Main Dashboard Layout ── */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+        
+        {/* Profile Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">Namaste, {worker.name}</h1>
+          <div className="flex flex-wrap gap-3 mt-3">
+            <span className="flex items-center gap-1.5 px-3 py-1 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-600 shadow-sm">
+              <Smartphone size={14} className="text-blue-500" /> {worker.platform.toUpperCase()}
+            </span>
+            <span className="flex items-center gap-1.5 px-3 py-1 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-600 shadow-sm">
+              <MapPin size={14} className="text-blue-500" /> {worker.city.toUpperCase()}
+            </span>
+            <span className="flex items-center gap-1.5 px-3 py-1 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-600 shadow-sm">
+              <Clock size={14} className="text-blue-500" /> {worker.weekly_hours} HRS/WK
+            </span>
           </div>
         </div>
 
-        {/* Active Policy / Risk Shield */}
-        {active_policy && (
-          <div className="bg-slate-900 rounded-[28px] p-6 text-white shadow-2xl relative overflow-hidden">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="font-bold flex items-center gap-2">
-                <Zap size={16} className="text-yellow-400 fill-yellow-400" />
-                Live Risk Shield
-              </h3>
-              <div className="bg-white/10 px-3 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase border border-white/10">
-                {active_policy.risk_level}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-6">
-              <div>
-                <p className="text-[10px] font-bold text-slate-400 uppercase mb-2">Weather Risk</p>
-                <div className="flex items-end gap-2">
-                  <span className="text-2xl font-black text-orange-400 leading-none">{(active_policy.weather_risk_score * 100).toFixed(0)}%</span>
-                  <div className="w-full bg-white/10 h-1.5 rounded-full mb-1 overflow-hidden">
-                    <div className="bg-orange-400 h-full rounded-full" style={{ width: `${active_policy.weather_risk_score * 100}%` }} />
-                  </div>
-                </div>
-              </div>
-              <div>
-                <p className="text-[10px] font-bold text-slate-400 uppercase mb-2">AQI Risk (Delhi/NCR)</p>
-                <div className="flex items-end gap-2">
-                  <span className="text-2xl font-black text-emerald-400 leading-none">{(active_policy.aqi_risk_score * 100).toFixed(0)}%</span>
-                  <div className="w-full bg-white/10 h-1.5 rounded-full mb-1 overflow-hidden">
-                    <div className="bg-emerald-400 h-full rounded-full" style={{ width: `${active_policy.aqi_risk_score * 100}%` }} />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-8 pt-5 border-t border-white/5 flex justify-between items-center">
-              <div>
-                <p className="text-[9px] font-bold text-slate-500 uppercase">Valid Until</p>
-                <p className="text-sm font-bold tracking-tight date-format">{active_policy.end_date}</p>
-              </div>
-              <div className="text-right">
-                <p className="text-[9px] font-bold text-slate-500 uppercase">Policy ID</p>
-                <p className="text-sm font-bold tracking-tight opacity-70">#LSS-{id.slice(0, 5).toUpperCase()}</p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Claims History List */}
-        <section>
-          <div className="flex justify-between items-center mb-4 px-1">
-            <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest">Recent Settlements</h3>
-            <button className="text-[10px] font-bold text-blue-600 uppercase underline decoration-2 underline-offset-4">View All</button>
-          </div>
+        <div className="flex flex-col lg:flex-row gap-8">
           
-          <div className="space-y-3">
-            {recent_claims.length === 0 ? (
-              <div className="text-center py-10 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-100">
-                <p className="text-xs font-bold text-slate-400">No claims detected yet. Your earnings are protected.</p>
-              </div>
-            ) : (
-              recent_claims.map(c => (
-                <div key={c.id} className="bg-white border border-slate-100 p-4 rounded-[20px] flex justify-between items-center shadow-sm">
-                  <div className="flex items-center gap-4">
-                    <div className="w-11 h-11 bg-emerald-50 rounded-full flex items-center justify-center text-emerald-600 border border-emerald-100">
-                      <IndianRupee size={20} strokeWidth={2.5} />
-                    </div>
-                    <div>
-                      <p className="text-sm font-black text-slate-900">Auto-Payout</p>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase date-format">
-                        {new Date(c.triggered_at).toLocaleDateString('en-IN')} • {new Date(c.triggered_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
-                      </p>
+          {/* ── LEFT COLUMN: Core Protection Data (65% width on PC) ── */}
+          <div className="w-full lg:w-[65%] space-y-8">
+            
+            {/* The Live Risk Shield Card */}
+            {active_policy && (
+              <div className="bg-slate-950 rounded-[2rem] p-6 sm:p-8 text-white shadow-xl relative overflow-hidden border border-slate-800">
+                <div className="absolute top-[-50px] right-[-50px] w-48 h-48 bg-blue-600 rounded-full blur-[80px] opacity-40"></div>
+                
+                <div className="relative z-10">
+                  <div className="flex justify-between items-center mb-8">
+                    <h3 className="text-lg font-black flex items-center gap-2">
+                      <Activity size={20} className="text-blue-400" />
+                      Live Risk Shield
+                    </h3>
+                    <div className={`px-4 py-1.5 rounded-full text-[10px] font-black tracking-widest uppercase border ${active_policy.risk_level === 'high' ? 'bg-red-500/20 text-red-400 border-red-500/30' : active_policy.risk_level === 'medium' ? 'bg-orange-500/20 text-orange-400 border-orange-500/30' : 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'}`}>
+                      {active_policy.risk_level} Risk
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className="text-sm font-black text-emerald-600">+₹{parseFloat(c.claim_amount).toLocaleString('en-IN')}</p>
-                    <StatusBadge s={c.status} />
+
+                  <div className="grid grid-cols-2 gap-8">
+                    <div>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Weather Threat</p>
+                      <div className="flex items-end gap-3">
+                        <span className="text-4xl font-black text-orange-400 leading-none">{(active_policy.weather_risk_score * 100).toFixed(0)}%</span>
+                      </div>
+                      <div className="w-full bg-slate-800 h-2 rounded-full mt-3 overflow-hidden">
+                        <div className="bg-gradient-to-r from-orange-500 to-red-500 h-full rounded-full transition-all duration-1000" style={{ width: `${active_policy.weather_risk_score * 100}%` }} />
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">AQI Threat</p>
+                      <div className="flex items-end gap-3">
+                        <span className="text-4xl font-black text-emerald-400 leading-none">{(active_policy.aqi_risk_score * 100).toFixed(0)}%</span>
+                      </div>
+                      <div className="w-full bg-slate-800 h-2 rounded-full mt-3 overflow-hidden">
+                        <div className="bg-gradient-to-r from-emerald-400 to-emerald-600 h-full rounded-full transition-all duration-1000" style={{ width: `${active_policy.aqi_risk_score * 100}%` }} />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-8 pt-6 border-t border-white/10 flex justify-between items-center">
+                    <div>
+                      <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Coverage Valid Until</p>
+                      <p className="text-sm font-bold">{active_policy.end_date}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Policy ID</p>
+                      <button 
+                        onClick={() => nav(`/policy/${active_policy.id}`)}
+                        className="text-sm font-black text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-1 justify-end underline decoration-blue-400/30 underline-offset-4"
+                      >
+                        #LSS-{id.slice(0, 6).toUpperCase()}
+                        <span className="text-[10px] no-underline">↗</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
-              ))
+              </div>
+            )}
+
+            {/* Financial Bento Grid */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="bg-white p-5 rounded-[1.5rem] border border-slate-200 shadow-sm border-t-4 border-t-blue-600 hover:shadow-md transition-shadow">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Premium</p>
+                <h2 className="text-2xl font-black text-slate-900">₹{parseFloat(active_policy?.weekly_premium || 0).toFixed(0)}</h2>
+                <p className="text-[9px] font-bold text-slate-400 mt-1 uppercase">Weekly Bill</p>
+              </div>
+              
+              <div className="bg-white p-5 rounded-[1.5rem] border border-slate-200 shadow-sm border-t-4 border-t-emerald-600 hover:shadow-md transition-shadow">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Max Benefit</p>
+                <h2 className="text-2xl font-black text-slate-900">₹{parseFloat(active_policy?.coverage_amount || 0).toLocaleString('en-IN')}</h2>
+                <p className="text-[9px] font-bold text-emerald-600 mt-1 uppercase">Guaranteed</p>
+              </div>
+              
+              <div className="bg-white p-5 rounded-[1.5rem] border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Claims</p>
+                <h2 className="text-2xl font-black text-slate-900">{total_claims}</h2>
+                <p className="text-[9px] font-bold text-slate-400 mt-1 uppercase">Auto-Submitted</p>
+              </div>
+              
+              <div className="bg-indigo-600 p-5 rounded-[1.5rem] shadow-md shadow-indigo-600/20 hover:shadow-lg transition-shadow">
+                <p className="text-[10px] font-black text-indigo-200 uppercase tracking-widest mb-1">Total Payout</p>
+                <h2 className="text-2xl font-black text-white">₹{total_paid_out.toLocaleString('en-IN')}</h2>
+                <p className="text-[9px] font-bold text-indigo-300 mt-1 uppercase tracking-widest">To UPI ID</p>
+              </div>
+            </div>
+
+            {/* Scan Notifications */}
+            {scanResult && !scanResult.error && (
+              <div className={`p-6 rounded-[1.5rem] border-2 animate-in fade-in slide-in-from-top-4 duration-500 shadow-sm ${scanResult.claims_created > 0 ? 'bg-emerald-50 border-emerald-200' : 'bg-blue-50 border-blue-200'}`}>
+                <div className="flex gap-4 items-center">
+                  <div className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${scanResult.claims_created > 0 ? 'bg-emerald-100 text-emerald-600' : 'bg-blue-100 text-blue-600'}`}>
+                    {scanResult.claims_created > 0 ? <CheckCircle size={24} /> : <Zap size={24} />}
+                  </div>
+                  <div>
+                    <p className={`text-base font-black ${scanResult.claims_created > 0 ? 'text-emerald-900' : 'text-blue-900'}`}>
+                      {scanResult.claims_created > 0 
+                        ? `Disruption Detected: ${scanResult.events?.join(', ')}` 
+                        : `Clear conditions in ${worker.city.toUpperCase()}`}
+                    </p>
+                    <p className="text-sm mt-1 text-slate-600 font-medium">
+                      {scanResult.claims_created > 0 
+                        ? `Auto-payout initiated to your registered UPI ID.`
+                        : `No disruptions found. Your daily earnings are secure.`}
+                    </p>
+                  </div>
+                </div>
+              </div>
             )}
           </div>
-        </section>
+
+          {/* ── RIGHT COLUMN: Activity & Actions (35% width on PC) ── */}
+          <div className="w-full lg:w-[35%] space-y-6">
+            
+            {/* Action Trigger - Hidden on Mobile (Mobile uses fixed bottom bar) */}
+            <div className="hidden lg:block bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm">
+              <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Environment Scanner</h3>
+              <button 
+                className="w-full h-16 bg-blue-600 hover:bg-blue-700 text-white font-black text-lg rounded-2xl shadow-xl shadow-blue-600/20 transition-all hover:-translate-y-1 active:scale-95 disabled:opacity-50 disabled:hover:translate-y-0 flex items-center justify-center gap-3" 
+                onClick={triggerScan} 
+                disabled={scanning}
+              >
+                {scanning ? (
+                  <>
+                    <div className="w-5 h-5 border-4 border-white/30 border-t-white rounded-full animate-spin" />
+                    <span>Analyzing...</span>
+                  </>
+                ) : (
+                  <>
+                    <Zap size={22} className="fill-white" />
+                    <span>Simulate Disruption</span>
+                  </>
+                )}
+              </button>
+            </div>
+
+            {/* Claims Feed */}
+            <div className="bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm h-full max-h-[600px] overflow-y-auto">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">Recent Settlements</h3>
+                <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest cursor-pointer hover:underline">View All</span>
+              </div>
+              
+              <div className="space-y-4">
+                {recent_claims.length === 0 ? (
+                  <div className="text-center py-12 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
+                    <CheckCircle size={32} className="mx-auto text-slate-300 mb-3" />
+                    <p className="text-sm font-bold text-slate-500">No claims detected yet.</p>
+                    <p className="text-xs font-medium text-slate-400 mt-1">Your earnings are protected.</p>
+                  </div>
+                ) : (
+                  recent_claims.map(c => (
+                    <div key={c.id} className="bg-slate-50 border border-slate-100 p-4 rounded-2xl flex justify-between items-center transition-all hover:border-blue-100 hover:shadow-sm">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-emerald-600 border border-slate-200 shadow-sm">
+                          <IndianRupee size={18} strokeWidth={3} />
+                        </div>
+                        <div>
+                          <p className="text-sm font-black text-slate-900">Auto-Payout</p>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase mt-0.5">
+                            {new Date(c.triggered_at).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' })} • {new Date(c.triggered_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-base font-black text-emerald-600 mb-1">+₹{parseFloat(c.claim_amount).toLocaleString('en-IN')}</p>
+                        <StatusBadge s={c.status} />
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+          </div>
+        </div>
       </main>
 
-      {/* Floating Action Button - Mobile Thumb Zone */}
-      <div className="fixed bottom-0 left-0 right-0 p-5 bg-gradient-to-t from-white via-white/90 to-transparent max-w-[480px] mx-auto z-50">
+      {/* ── MOBILE ONLY: Floating Action Button ── */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 p-5 bg-gradient-to-t from-white via-white/95 to-transparent z-50">
         <button 
-          className="btn-primary shadow-xl shadow-blue-200 active:scale-95 transition-transform" 
+          className="w-full h-16 bg-blue-600 hover:bg-blue-700 text-white font-black text-lg rounded-2xl shadow-[0_8px_30px_rgb(37,99,235,0.3)] transition-transform active:scale-95 disabled:opacity-50 flex items-center justify-center gap-3" 
           onClick={triggerScan} 
           disabled={scanning}
         >
           {scanning ? (
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              <span>Analyzing Environment...</span>
-            </div>
+            <>
+              <div className="w-5 h-5 border-4 border-white/30 border-t-white rounded-full animate-spin" />
+              <span>Analyzing...</span>
+            </>
           ) : (
             <>
-              <Zap size={20} className="fill-white" />
+              <Zap size={22} className="fill-white" />
               <span>Simulate Disruption</span>
             </>
           )}

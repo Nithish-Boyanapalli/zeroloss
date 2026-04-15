@@ -32,7 +32,10 @@ export default function WorkerDashboard() {
   useEffect(() => {
     workersAPI.dashboard(id)
       .then(r => setData(r.data))
-      .catch(() => nav('/'))
+      .catch(() => {
+         import('../App').then(({ session }) => session.clear()); // Clear stale session
+         nav('/');
+      })
       .finally(() => setLoading(false))
   }, [id, nav])
 

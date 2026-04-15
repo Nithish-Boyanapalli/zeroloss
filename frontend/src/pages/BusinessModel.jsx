@@ -1,32 +1,13 @@
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Target, TrendingUp, IndianRupee, Users, Shield, Zap, PieChart } from 'lucide-react'
-
+import AdminNav from '../components/ui/AdminNav'
 export default function BusinessModel() {
   const nav = useNavigate()
 
   return (
     <div className="min-h-screen bg-slate-950 font-sans text-slate-300 pb-20">
       
-      {/* ── Sticky Nav ── */}
-      <nav className="sticky top-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800 px-6 py-4 w-full">
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <div className="bg-blue-600 p-2 rounded-xl shadow-sm">
-              <Shield size={20} className="text-white" />
-            </div>
-            <div>
-              <h2 className="font-black text-white leading-tight text-xl">ZeroLoss</h2>
-              <p className="text-[9px] font-bold text-blue-500 uppercase tracking-widest">Pitch Deck & Economics</p>
-            </div>
-          </div>
-          <button 
-            onClick={() => nav('/')} 
-            className="flex items-center gap-2 text-xs font-bold text-slate-400 hover:text-white transition-colors uppercase tracking-widest"
-          >
-            <ArrowLeft size={16} /> Exit Pitch
-          </button>
-        </div>
-      </nav>
+      <AdminNav />
 
       <main className="max-w-7xl mx-auto px-6 pt-12 lg:pt-16">
         

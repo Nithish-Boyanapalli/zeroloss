@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { User, Phone, Mail, Wallet, Shield, MapPin, Briefcase, LogOut, Save, AlertCircle, CheckCircle2 } from 'lucide-react'
 import { workersAPI, policiesAPI } from '../services/api'
+import { session } from '../App'
 
 export default function Profile() {
   const { id } = useParams()
@@ -85,8 +86,8 @@ export default function Profile() {
         <div className="max-w-xl mx-auto flex justify-between items-center">
           <h1 className="text-2xl font-black tracking-tight text-slate-900">My Profile</h1>
           <button 
-            onClick={() => nav('/')}
-            className="w-10 h-10 bg-slate-100 text-slate-500 rounded-full flex items-center justify-center hover:bg-slate-200 hover:text-slate-700 transition-colors"
+            onClick={() => { session.clear(); nav('/'); }}
+            className="w-10 h-10 bg-slate-100 text-slate-500 rounded-full flex items-center justify-center hover:bg-red-50 hover:text-red-600 transition-colors"
           >
             <LogOut size={18} />
           </button>

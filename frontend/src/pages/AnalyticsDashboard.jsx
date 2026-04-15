@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Shield, ArrowLeft, TrendingUp, TrendingDown, CloudLightning, Activity, AlertOctagon, Map, RefreshCw } from 'lucide-react'
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, LineChart, Line, Legend, ComposedChart } from 'recharts'
 import { analyticsAPI } from '../services/api'
-
+import AdminNav from '../components/ui/AdminNav'
 export default function AnalyticsDashboard() {
   const nav = useNavigate()
   const [loading, setLoading] = useState(true)
@@ -74,21 +74,7 @@ export default function AnalyticsDashboard() {
   return (
     <div className="min-h-screen bg-slate-950 font-sans text-slate-300 pb-20">
       
-      {/* ── Top Navigation ── */}
-      <nav className="sticky top-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800 px-6 py-4 flex justify-between items-center">
-        <div className="flex items-center gap-3 cursor-pointer" onClick={() => nav('/admin')}>
-          <div className="bg-blue-600 p-2 rounded-xl">
-            <Activity size={20} className="text-white" />
-          </div>
-          <span className="text-xl font-black text-white tracking-tight">ZeroLoss <span className="text-emerald-500 font-medium">Analytics</span></span>
-        </div>
-        <button 
-          onClick={() => nav('/admin')} 
-          className="flex items-center gap-2 text-xs font-bold text-slate-400 hover:text-white transition-colors uppercase tracking-widest"
-        >
-          <ArrowLeft size={16} /> Back to Operations
-        </button>
-      </nav>
+      <AdminNav />
 
       <main className="max-w-7xl mx-auto px-6 pt-10">
         

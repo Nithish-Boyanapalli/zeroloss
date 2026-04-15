@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Shield, Users, FileText, AlertTriangle, Zap, TrendingUp, RefreshCw, Activity } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
 import { adminAPI, disruptionsAPI } from '../services/api'
+import AdminNav from '../components/ui/AdminNav'
 
 const CITIES = ['hyderabad','mumbai','delhi','bangalore','chennai','kolkata','pune']
 
@@ -60,28 +61,24 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-slate-950 font-sans text-slate-300 pb-12">
       
-      {/* ── Top Navigation Bar ── */}
-      <div className="sticky top-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800 px-6 py-4 flex justify-between items-center">
-        <div className="flex items-center gap-3 cursor-pointer" onClick={() => nav('/')}>
-          <div className="bg-blue-600 p-2 rounded-xl">
-            <Shield size={20} className="text-white" />
-          </div>
-          <span className="text-xl font-black text-white tracking-tight">ZeroLoss <span className="text-blue-500 font-medium">Admin</span></span>
-        </div>
-        <div className="flex gap-3">
-          <button className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl transition-colors border border-slate-700" onClick={() => nav('/register')}>
-            + New Worker
-          </button>
-          <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition-colors flex items-center gap-2 shadow-lg shadow-blue-900/20" onClick={load}>
-            <RefreshCw size={14} /> Refresh
-          </button>
-        </div>
-      </div>
+      <AdminNav />
 
       <div className="max-w-[1400px] mx-auto px-6 pt-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-black text-white tracking-tight">Operations Dashboard</h1>
-          <p className="text-slate-500 text-sm mt-1">Real-time telemetry of active policies, anomaly detection, and automated payouts.</p>
+        
+        {/* Updated Header with your Action Buttons preserved */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+          <div>
+            <h1 className="text-3xl font-black text-white tracking-tight">Operations Dashboard</h1>
+            <p className="text-slate-500 text-sm mt-1">Real-time telemetry of active policies, anomaly detection, and automated payouts.</p>
+          </div>
+          <div className="flex gap-3">
+            <button className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded-xl transition-colors border border-slate-700" onClick={() => nav('/register')}>
+              + New Worker
+            </button>
+            <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition-colors flex items-center gap-2 shadow-lg shadow-blue-900/20" onClick={load}>
+              <RefreshCw size={14} /> Refresh
+            </button>
+          </div>
         </div>
 
         {/* ── KPI Grid ── */}

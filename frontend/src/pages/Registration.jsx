@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Shield, ArrowLeft, CheckCircle, User, Mail, Wallet, Zap, MapPin, Briefcase } from 'lucide-react'
 import { workersAPI, policiesAPI } from '../services/api'
+import { session } from '../App'
 
 const CITIES = ['hyderabad', 'mumbai', 'delhi', 'bangalore', 'chennai', 'kolkata', 'pune', 'ahmedabad']
 const PLATFORMS = ['swiggy', 'zomato', 'blinkit', 'amazon', 'zepto', 'other']
@@ -58,15 +59,12 @@ export default function Registration() {
   const submit = async () => {
     setLoading(true); setError('')
     try {
-      // 1. Register the Worker
       const wr = await workersAPI.register({
         ...form,
         weekly_hours: parseInt(form.weekly_hours),
         avg_daily_orders: parseInt(form.avg_daily_orders),
         avg_weekly_income: parseFloat(form.avg_weekly_income),
       })
-      
-      // 2. Create the Policy using the LOCKED QUOTE
       const pr = await policiesAPI.create({ 
         worker_id: wr.data.id, 
         auto_renew: true,
@@ -78,6 +76,10 @@ export default function Registration() {
       
       setWorker(wr.data); 
       setPolicy(pr.data); 
+      
+      // ADD THIS ONE LINE HERE!
+      session.save(wr.data.id, wr.data.name);
+      
       setStep(3)
     } catch (e) {
       setError(e.response?.data?.detail || 'Registration failed. Check your details.')

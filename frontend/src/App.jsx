@@ -10,7 +10,7 @@ import AnalyticsDashboard from './pages/AnalyticsDashboard'
 import Profile from './pages/Profile'
 import WorkerPolicies from './pages/WorkerPolicies'
 import WorkerClaims from './pages/WorkerClaims'
-import BottomNav from './components/BottomNav'
+import BottomNav from './components/ui/BottomNav'
 
 // ── SESSION HELPERS (localStorage) ──
 export const session = {

@@ -137,7 +137,7 @@ export default function AdminDashboard() {
               <div className="mt-6 bg-slate-950 border border-slate-800 rounded-2xl p-5">
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
                   {[
-                    ['Target',       scanResult.city.toUpperCase()],
+                    ['Target',       (scanResult.city || scanCity).toUpperCase()],
                     ['Anomalies',    scanResult.disruptions],
                     ['Policies Hit', scanResult.policies_found],
                     ['Claims Built', scanResult.claims_created],
@@ -254,8 +254,8 @@ export default function AdminDashboard() {
                 <tbody className="text-sm">
                   {dash.recent_disruptions.map(d => (
                     <tr key={d.id} className="border-b border-slate-800 hover:bg-slate-800/50 transition-colors">
-                      <td className="p-4 font-bold text-white">{d.type.replace(/_/g,' ').toUpperCase()}</td>
-                      <td className="p-4 text-slate-400 font-medium">{d.city.toUpperCase()}</td>
+                      <td className="p-4 font-bold text-white">{(d.type || 'Unknown').replace(/_/g,' ').toUpperCase()}</td>
+                      <td className="p-4 text-slate-400 font-medium">{(d.city || 'Unknown').toUpperCase()}</td>
                       <td className="p-4 font-black text-amber-500">{d.severity} {d.unit}</td>
                       <td className="p-4 text-slate-400 font-medium">{d.threshold_value}</td>
                       <td className="p-4">
